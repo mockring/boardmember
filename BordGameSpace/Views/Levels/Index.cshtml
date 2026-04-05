@@ -9,53 +9,100 @@
     <a asp-action="Create" class="btn btn-primary">新增等級</a>
 </div>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
 <div class="card">
     <div class="card-body">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>排序</th>
-                    <th>等級名稱</th>
-                    <th>升級時數門檻</th>
-                    <th>升級金額門檻</th>
-                    <th>遊戲折扣</th>
-                    <th>平日場地費</th>
-                    <th>假日場地費</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var level in Model)
-                {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
                     <tr>
-                        <td>@level.SortOrder</td>
-                        <td>
-                            @level.Name
-                            @if (level.IsDefault)
-                            {
-                                <span class="badge bg-success">預設</span>
-                            }
-                            @if (!level.IsDeletable)
-                            {
-                                <span class="badge bg-secondary">不可刪</span>
-                            }
-                        </td>
-                        <td>@level.UpgradeThresholdHours 小時</td>
-                        <td>@level.UpgradeThresholdAmount.ToString("C0")</td>
-                        <td>@((level.GameDiscount * 10).ToString("0.0")) 折</td>
-                        <td>@level.WeekdayHourlyRate 元/小時</td>
-                        <td>@level.HolidayHourlyRate 元/小時</td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@level.Id" class="btn btn-sm btn-outline-primary">編輯</a>
-                            @if (level.IsDeletable)
-                            {
-                                <a asp-action="Delete" asp-route-id="@level.Id" class="btn btn-sm btn-outline-danger"
-                                   onclick="return confirm('確定要刪除嗎？')">刪除</a>
-                            }
-                        </td>
+                        <th>排序</th>
+                        <th>等級名稱</th>
+                        <th>升級時數門檻</th>
+                        <th>升級金額門檻</th>
+                        <th>遊戲折扣</th>
+                        <th>平日費</th>
+                        <th>假日費</th>
+                        <th>會員數</th>
+                        <th>狀態</th>
+                        <th>操作</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var level in Model.OrderBy(l => l.SortOrder))
+                    {
+                        <tr>
+                            <td>@level.SortOrder</td>
+                            <td>
+                                <strong>@level.Name</strong>
+                                @if (level.IsDefault)
+                                {
+                                    <span class="badge bg-success ms-1">預設</span>
+                                }
+                            </td>
+                            <td>@level.UpgradeThresholdHours 小時</td>
+                            <td>@level.UpgradeThresholdAmount.ToString("C0")</td>
+                            <td>@(((decimal)level.GameDiscount * 10).ToString("0.0")) 折</td>
+                            <td>@level.WeekdayHourlyRate 元/hr</td>
+                            <td>@level.HolidayHourlyRate 元/hr</td>
+                            <td>
+                                <span class="badge bg-secondary">@level.Members?.Count()</span>
+                            </td>
+                            <td>
+                                @if (level.IsDeletable)
+                                {
+                                    <span class="badge bg-light text-dark border">可刪</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-dark">不可刪</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@level.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                                @if (!level.IsDefault)
+                                {
+                                    <a asp-action="SetDefault" asp-route-id="@level.Id" class="btn btn-sm btn-outline-success"
+                                       onclick="return confirm('確定要將「@level.Name」設為預設等級嗎？')">
+                                        設為預設
+                                    </a>
+                                }
+                                @if (level.IsDeletable)
+                                {
+                                    <a asp-action="Delete" asp-route-id="@level.Id" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('確定要刪除「@level.Name」嗎？')">刪除</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-2 text-muted">
+            共 @Model.Count() 個等級
+        </div>
+    </div>
+</div>
+
+<!-- 等級福利說明 -->
+<div class="card mt-3 border-info">
+    <div class="card-header bg-info text-white"><h5 class="mb-0">ℹ️ 等級制度說明</h5></div>
+    <div class="card-body">
+        <ul class="mb-0">
+            <li><strong>升級條件：</strong>會員需<strong>同時滿足</strong>「累積遊玩時數」與「累積消費金額」門檻才會自動升級</li>
+            <li><strong>預設等級：</strong>新會員註冊時套用的等級，每個系統應只有一個預設等級</li>
+            <li><strong>不可刪等級：</strong>預設等級不可刪除，確保系統運作正常</li>
+            <li><strong>場地費折扣：</strong>依會員等級適用的平日/假日場地費單價（用於遊玩計時收費）</li>
+            <li><strong>遊戲折扣：</strong>會員購買桌上遊戲時適用的折扣比例</li>
+        </ul>
     </div>
 </div>

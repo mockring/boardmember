@@ -79,10 +79,10 @@
                                 <div class="card-body text-center">
                                     <h6>@product.Name</h6>
                                     <p class="text-primary mb-1">$@product.Price</p>
-                                    <p class="small text-muted mb-2">庫存: @product.Stock</p>
+                                    <p class="small text-muted mb-2">庫存: @(product.Stock?.ToString() ?? "-")</p>
                                     <div class="input-group input-group-sm mx-auto" style="width: 100px;">
                                         <button class="btn btn-outline-secondary" onclick="decreaseQty(@product.Id)">-</button>
-                                        <input type="number" id="qty_@product.Id" class="form-control text-center" value="0" min="0" max="@product.Stock" readonly>
+                                        <input type="number" id="qty_@product.Id" class="form-control text-center" value="0" min="0" max="@((product.Stock ?? 0) > 0 ? product.Stock : 100)" readonly>
                                         <button class="btn btn-outline-secondary" onclick="increaseQty(@product.Id)">+</button>
                                     </div>
                                 </div>

@@ -9,14 +9,46 @@ public class PointsService
     private readonly AppDbContext _db;
     private readonly ILogger<PointsService> _logger;
 
-    // 預設：消費 1 元 = 1 積分，1 積分 = 1 元折抵
-    private const decimal DEFAULT_EARN_RATE = 1m;
-    private const decimal DEFAULT_REDEEM_RATE = 1m;
-
     public PointsService(AppDbContext db, ILogger<PointsService> logger)
     {
         _db = db;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// 取得積分設定
+    /// </summary>
+    public async Task<PointSetting?> GetSettingsAsync()
+    {
+        return await _db.PointSettings.FirstOrDefaultAsync();
+    }
+
+    /// <summary>
+    /// 更新積分設定
+    /// </summary>
+    public async Task<bool> UpdateSettingsAsync(PointSetting settings)
+    {
+        var existing = await _db.PointSettings.FirstOrDefaultAsync();
+        if (existing == null)
+        {
+            settings.Id = 1;
+            settings.CreatedAt = DateTime.Now;
+            settings.UpdatedAt = DateTime.Now;
+            _db.PointSettings.Add(settings);
+        }
+        else
+        {
+            existing.EarnRate = settings.EarnRate;
+            existing.RedeemRate = settings.RedeemRate;
+            existing.MinRedeemPoints = settings.MinRedeemPoints;
+            existing.ApplicableLevelId = settings.ApplicableLevelId;
+            existing.IsEnabled = settings.IsEnabled;
+            existing.Description = settings.Description;
+            existing.UpdatedAt = DateTime.Now;
+        }
+
+        await _db.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -46,11 +78,13 @@ public class PointsService
     }
 
     /// <summary>
-    /// 根據消費金額計算可獲得積分
+    /// 根據消費金額計算可獲得積分（使用資料庫設定）
     /// </summary>
-    public int CalculateEarnPoints(decimal amount)
+    public async Task<int> CalculateEarnPointsAsync(decimal amount)
     {
-        return (int)Math.Floor(amount * DEFAULT_EARN_RATE);
+        var settings = await GetSettingsAsync();
+        var rate = settings?.EarnRate ?? 1m;
+        return (int)Math.Floor(amount * rate);
     }
 
     /// <summary>
@@ -62,11 +96,55 @@ public class PointsService
     }
 
     /// <summary>
-    /// 計算積分可折抵的金額
+    /// 計算積分可折抵的金額（使用資料庫設定）
     /// </summary>
-    public decimal CalculateRedeemValue(int points)
+    public async Task<decimal> CalculateRedeemValueAsync(int points)
     {
-        return points * DEFAULT_REDEEM_RATE;
+        var settings = await GetSettingsAsync();
+        var rate = settings?.RedeemRate ?? 1m;
+        return points * rate;
+    }
+
+    /// <summary>
+    /// 計算積分可折抵的金額（可自訂比率）
+    /// </summary>
+    public decimal CalculateRedeemValue(int points, decimal redeemRate)
+    {
+        return points * redeemRate;
+    }
+
+    /// <summary>
+    /// 檢查積分折抵是否達到最低門檻
+    /// </summary>
+    public async Task<bool> CanRedeemAsync(int points)
+    {
+        var settings = await GetSettingsAsync();
+        var minPoints = settings?.MinRedeemPoints ?? 100;
+        return points >= minPoints;
+    }
+
+    /// <summary>
+    /// 檢查會員是否符合積分資格
+    /// </summary>
+    public async Task<bool> IsEligibleForPointsAsync(int memberId)
+    {
+        var settings = await GetSettingsAsync();
+        if (settings == null || !settings.IsEnabled)
+            return false;
+
+        if (settings.ApplicableLevelId == 0)
+            return true;
+
+        var member = await _db.Members.FindAsync(memberId);
+        if (member == null)
+            return false;
+
+        // 檢查會員等級是否為指定等級或更高
+        var applicableLevel = await _db.Levels.FindAsync(settings.ApplicableLevelId);
+        if (applicableLevel == null)
+            return true;
+
+        return member.Level != null && member.Level.SortOrder >= applicableLevel.SortOrder;
     }
 
     /// <summary>

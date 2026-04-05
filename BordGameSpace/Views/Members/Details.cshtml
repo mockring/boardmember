@@ -1,0 +1,196 @@
+@model BordGameSpace.Models.Member
+@{
+    ViewData["Title"] = "會員詳情";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>👤 @Model.Name</h2>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">編輯</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">返回列表</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="row g-3">
+    <!-- 基本資料 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">📋 基本資料</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="35%">姓名</th>
+                        <td>@Model.Name</td>
+                    </tr>
+                    <tr>
+                        <th>電話</th>
+                        <td>@Model.Phone</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>@Model.Email</td>
+                    </tr>
+                    <tr>
+                        <th>生日</th>
+                        <td>@(Model.Birthday?.ToString("yyyy-MM-dd") ?? "未填寫")</td>
+                    </tr>
+                    <tr>
+                        <th>狀態</th>
+                        <td>
+                            @if (Model.Status)
+                            {
+                                <span class="badge bg-success">啟用</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">停用</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>註冊日期</th>
+                        <td>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 等級與福利 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">🏅 等級與福利</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="35%">當前等級</th>
+                        <td><span class="badge bg-info fs-6">@Model.Level?.Name</span></td>
+                    </tr>
+                    <tr>
+                        <th>遊戲購買折扣</th>
+                        <td>@(((Model.Level?.GameDiscount ?? 1m) * 10).ToString("0.0")) 折</td>
+                    </tr>
+                    <tr>
+                        <th>平日場地費</th>
+                        <td>@(Model.Level?.WeekdayHourlyRate ?? 0) 元/小時</td>
+                    </tr>
+                    <tr>
+                        <th>假日場地費</th>
+                        <td>@(Model.Level?.HolidayHourlyRate ?? 0) 元/小時</td>
+                    </tr>
+                </table>
+
+                <hr>
+
+                <h6 class="mb-2">調整等級</h6>
+                <form method="get" asp-action="ChangeLevel">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <select name="levelId" class="form-select">
+                                @foreach (var level in (List<BordGameSpace.Models.Level>)ViewBag.Levels)
+                                {
+                                    <option value="@level.Id" selected="@(Model.LevelId == level.Id)">
+                                        @level.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <button type="submit" class="btn btn-outline-primary w-100">調整</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消費統計 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">📊 消費統計</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">累積遊玩時數</th>
+                        <td class="fs-5 fw-bold">@Model.TotalPlayHours 小時</td>
+                    </tr>
+                    <tr>
+                        <th>累積消費金額</th>
+                        <td class="fs-5 fw-bold text-primary">@Model.TotalSpending.ToString("C0")</td>
+                    </tr>
+                </table>
+
+                @{
+                    var allLevels = (List<BordGameSpace.Models.Level>)ViewBag.Levels;
+                    var currentSort = Model.Level?.SortOrder ?? 0;
+                    var nextLevel = allLevels
+                        .Where(l => l.SortOrder > currentSort)
+                        .OrderBy(l => l.SortOrder)
+                        .FirstOrDefault();
+                }
+
+                @if (nextLevel != null)
+                {
+                    <hr>
+                    <h6 class="mb-2">升級進度</h6>
+                    var hoursNeeded = nextLevel.UpgradeThresholdHours - Model.TotalPlayHours;
+                    var amountNeeded = nextLevel.UpgradeThresholdAmount - Model.TotalSpending;
+                    <div class="text-muted small">
+                        距離「@nextLevel.Name」還需：
+                        <ul class="mb-0">
+                            <li>遊玩時數：@(hoursNeeded > 0 ? $"{hoursNeeded} 小時" : "已滿足")</li>
+                            <li>消費金額：@(amountNeeded > 0 ? amountNeeded.ToString("C0") : "已滿足")</li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">⚡ 快速操作</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="ResetPassword" asp-route-id="@Model.Id" class="btn btn-outline-warning"
+                       onclick="return confirm('確定要重設「@Model.Name」的密碼嗎？\n新密碼將設為電話後6碼。')">
+                        🔑 重設密碼（設為電話後6碼）
+                    </a>
+                    @if (Model.Status)
+                    {
+                        <a asp-action="ToggleStatus" asp-route-id="@Model.Id" class="btn btn-outline-danger"
+                           onclick="return confirm('確定要停用「@Model.Name」嗎？\n停用後會員將無法登入。')">
+                            ⛔ 停用會員
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="ToggleStatus" asp-route-id="@Model.Id" class="btn btn-outline-success">
+                            ✅ 啟用會員
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

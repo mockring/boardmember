@@ -41,8 +41,12 @@
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Coupons" asp-action="Index">優惠券</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Points" asp-action="Index">積分</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">積分</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-controller="Points" asp-action="Index">🏆 積分管理</a></li>
+                            <li><a class="dropdown-item" asp-controller="Points" asp-action="Settings">⚙️ 積分設定</a></li>
+                        </ul>
                     </li>
                 </ul>
                 <ul class="navbar-nav">

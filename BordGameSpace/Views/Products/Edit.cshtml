@@ -56,14 +56,14 @@
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label asp-for="Cost" class="form-label">成本</label>
-                                <input asp-for="Cost" type="number" class="form-control" />
+                                <label asp-for="Stock" class="form-label">庫存</label>
+                                <input asp-for="Stock" type="number" class="form-control" />
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label asp-for="Stock" class="form-label">庫存</label>
-                                <input asp-for="Stock" type="number" class="form-control" />
+                                <label asp-for="LowStockAlert" class="form-label">低庫存警示值</label>
+                                <input asp-for="LowStockAlert" type="number" class="form-control" />
                             </div>
                         </div>
                     </div>
@@ -71,16 +71,15 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label asp-for="LowStockAlert" class="form-label">低庫存警示值</label>
-                                <input asp-for="LowStockAlert" type="number" class="form-control" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
                                 <label asp-for="ImageUrl" class="form-label">圖片網址</label>
                                 <input asp-for="ImageUrl" class="form-control" />
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="IsService" type="checkbox" class="form-check-input" />
+                        <label asp-for="IsService" class="form-check-label">服務項目（不控管庫存）</label>
                     </div>
 
                     <div class="mb-3 form-check">

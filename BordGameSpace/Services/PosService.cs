@@ -185,13 +185,13 @@ public class PosService
                 };
                 _db.OrderItems.Add(orderItem);
 
-                // 庫存扣減（商品類型）
+                // 庫存扣減（實體商品）
                 if (item.ItemType == "Product")
                 {
                     var product = await _db.Products.FindAsync(item.ItemId);
-                    if (product != null)
+                    if (product != null && !product.IsService)
                     {
-                        product.Stock -= item.Quantity;
+                        product.Stock = (product.Stock ?? 0) - item.Quantity;
                         if (product.Stock < 0) product.Stock = 0;
                     }
                 }

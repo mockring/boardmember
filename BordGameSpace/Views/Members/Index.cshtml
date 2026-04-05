@@ -1,7 +1,122 @@
+@model IEnumerable<BordGameSpace.Models.Member>
 @{
     ViewData["Title"] = "會員管理";
     Layout = "_AdminLayout";
 }
 
-<h2>👥 會員管理</h2>
-<p class="text-muted">（第二階段實作）</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>👥 會員管理</h2>
+    <a asp-action="Create" class="btn btn-primary">新增會員</a>
+</div>
+
+<!-- 搜尋與篩選 -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-4">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control"
+                       placeholder="搜尋姓名、電話或Email">
+            </div>
+            <div class="col-md-3">
+                <select name="levelId" class="form-select">
+                    <option value="">全部等級</option>
+                    @foreach (var level in (List<BordGameSpace.Models.Level>)ViewBag.Levels)
+                    {
+                        <option value="@level.Id" selected="@(ViewBag.LevelId == level.Id)">@level.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">全部狀態</option>
+                    <option value="true" selected="@(ViewBag.Status == true)">啟用</option>
+                    <option value="false" selected="@(ViewBag.Status == false)">停用</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">篩選</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 會員列表 -->
+<div class="card">
+    <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>電話</th>
+                        <th>Email</th>
+                        <th>等級</th>
+                        <th>累積時數</th>
+                        <th>累積消費</th>
+                        <th>狀態</th>
+                        <th>註冊日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">目前沒有會員資料</td>
+                        </tr>
+                    }
+                    @foreach (var m in Model)
+                    {
+                        <tr>
+                            <td>@m.Name</td>
+                            <td>@m.Phone</td>
+                            <td>@m.Email</td>
+                            <td>
+                                <span class="badge bg-info">@m.Level?.Name</span>
+                            </td>
+                            <td>@m.TotalPlayHours 小時</td>
+                            <td>@m.TotalSpending.ToString("C0")</td>
+                            <td>
+                                @if (m.Status)
+                                {
+                                    <span class="badge bg-success">啟用</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">停用</span>
+                                }
+                            </td>
+                            <td>@m.CreatedAt.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@m.Id" class="btn btn-sm btn-outline-primary">詳情</a>
+                                <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                                @if (m.Status)
+                                {
+                                    <a asp-action="ToggleStatus" asp-route-id="@m.Id" class="btn btn-sm btn-outline-warning"
+                                       onclick="return confirm('確定要停用「@m.Name」嗎？')">停用</a>
+                                }
+                                else
+                                {
+                                    <a asp-action="ToggleStatus" asp-route-id="@m.Id" class="btn btn-sm btn-outline-success">啟用</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-2 text-muted">
+            共 @Model.Count() 筆資料
+        </div>
+    </div>
+</div>

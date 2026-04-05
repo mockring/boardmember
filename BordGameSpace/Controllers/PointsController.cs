@@ -19,20 +19,63 @@ public class PointsController : BaseController
     }
 
     /// <summary>
-    /// 積分設定頁面
+    /// 積分管理首頁
     /// </summary>
     public async Task<IActionResult> Index()
     {
         if (!IsAdminLoggedIn)
             return RedirectToAction("Login", "Admin");
 
+        var settings = await _pointsService.GetSettingsAsync();
         var leaderboard = await _pointsService.GetLeaderboardAsync(20);
         var levels = await _db.Levels.OrderBy(l => l.SortOrder).ToListAsync();
 
+        ViewBag.Settings = settings;
         ViewBag.Leaderboard = leaderboard;
         ViewBag.Levels = levels;
 
         return View();
+    }
+
+    /// <summary>
+    /// 積分設定頁面
+    /// </summary>
+    public async Task<IActionResult> Settings()
+    {
+        if (!IsAdminLoggedIn)
+            return RedirectToAction("Login", "Admin");
+
+        var settings = await _pointsService.GetSettingsAsync();
+        var levels = await _db.Levels.OrderBy(l => l.SortOrder).ToListAsync();
+
+        ViewBag.Levels = levels;
+        return View(settings ?? new PointSetting());
+    }
+
+    /// <summary>
+    /// 儲存積分設定
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveSettings(PointSetting model)
+    {
+        if (!IsAdminLoggedIn)
+            return RedirectToAction("Login", "Admin");
+
+        if (model.EarnRate < 0 || model.RedeemRate < 0)
+        {
+            TempData["ErrorMessage"] = "比率不能為負數";
+            return RedirectToAction("Settings");
+        }
+
+        var success = await _pointsService.UpdateSettingsAsync(model);
+
+        if (success)
+            TempData["SuccessMessage"] = "積分設定已更新";
+        else
+            TempData["ErrorMessage"] = "儲存失敗";
+
+        return RedirectToAction("Settings");
     }
 
     /// <summary>

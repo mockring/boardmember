@@ -59,6 +59,43 @@
     </div>
 </div>
 
+<!-- 低庫存警示 -->
+@if (ViewBag.LowStockCount > 0)
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    ⚠️ 低庫存警示 (@ViewBag.LowStockCount 項商品)
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>商品名稱</th>
+                                <th>類別</th>
+                                <th>當前庫存</th>
+                                <th>警示值</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in ViewBag.LowStockProducts)
+                            {
+                                <tr>
+                                    <td>@p.Name</td>
+                                    <td>@p.Category</td>
+                                    <td class="text-danger">@(p.Stock?.ToString() ?? "-")</td>
+                                    <td>@p.LowStockAlert</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- 進行中的遊玩名單 -->
 @if (ViewBag.ActivePlays != null && ((List<BordGameSpace.Models.PlayRecord>)ViewBag.ActivePlays).Any())
 {
@@ -118,43 +155,6 @@
                                             <a asp-controller="Pos" asp-action="CheckoutPlay" asp-route-playId="@play.Id" class="btn btn-sm btn-warning">結帳</a>
                                         }
                                     </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- 低庫存警示 -->
-@if (ViewBag.LowStockCount > 0)
-{
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                    ⚠️ 低庫存警示 (@ViewBag.LowStockCount 項商品)
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>商品名稱</th>
-                                <th>類別</th>
-                                <th>當前庫存</th>
-                                <th>警示值</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in ViewBag.LowStockProducts)
-                            {
-                                <tr>
-                                    <td>@p.Name</td>
-                                    <td>@p.Category</td>
-                                    <td class="text-danger">@p.Stock</td>
-                                    <td>@p.LowStockAlert</td>
                                 </tr>
                             }
                         </tbody>

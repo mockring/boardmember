@@ -1,0 +1,100 @@
+@model BordGameSpace.Models.Member
+@{
+    ViewData["Title"] = "編輯會員";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>✏️ 編輯會員</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">返回列表</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" asp-action="Edit">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@Model.Id" />
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                    <input type="text" name="Name" class="form-control" required maxlength="100"
+                           value="@Model.Name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">電話 <span class="text-danger">*</span></label>
+                    <input type="text" name="Phone" class="form-control" required maxlength="20"
+                           value="@Model.Phone">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="Email" class="form-control" required maxlength="255"
+                           value="@Model.Email">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">生日</label>
+                    <input type="date" name="Birthday" class="form-control"
+                           value="@(Model.Birthday?.ToString("yyyy-MM-dd") ?? "")">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">會員等級</label>
+                    <select name="LevelId" class="form-select">
+                        @foreach (var level in (List<BordGameSpace.Models.Level>)ViewBag.Levels)
+                        {
+                            <option value="@level.Id" selected="@(Model.LevelId == level.Id)">
+                                @level.Name
+                            </option>
+                        }
+                    </select>
+                    <div class="form-text">手動調整會員等級（不受自動升級規則限制）</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">狀態</label>
+                    <select name="Status" class="form-select">
+                        <option value="true" selected="@(Model.Status)">啟用</option>
+                        <option value="false" selected="@(!Model.Status)">停用</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">🔑 重設密碼</h5>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="changePassword" id="changePassword"
+                               value="true">
+                        <label class="form-check-label" for="changePassword">
+                            勾選以修改密碼
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">新密碼（6-20字）</label>
+                    <input type="password" name="newPassword" class="form-control" maxlength="20"
+                           id="newPassword" disabled>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">儲存修改</button>
+                <a asp-action="Index" class="btn btn-outline-secondary ms-2">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('changePassword').addEventListener('change', function () {
+            document.getElementById('newPassword').disabled = !this.checked;
+            if (!this.checked) document.getElementById('newPassword').value = '';
+        });
+    </script>
+}

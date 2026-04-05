@@ -1,6 +1,7 @@
 @{
-    ViewData["Title"] = "積分設定";
+    ViewData["Title"] = "積分管理";
     Layout = "_AdminLayout";
+    var settings = ViewBag.Settings as BordGameSpace.Models.PointSetting;
     var leaderboard = ViewBag.Leaderboard as List<(BordGameSpace.Models.Member Member, int Balance)>;
     var levels = ViewBag.Levels as List<BordGameSpace.Models.Level>;
 }
@@ -8,30 +9,53 @@
 <h2>🏆 積分管理</h2>
 
 <div class="row mb-4">
-    <!-- 積分規則 -->
+    <!-- 積分規則（動態讀取設定） -->
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                📋 積分規則
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>📋 積分規則</span>
+                <a asp-action="Settings" class="btn btn-sm btn-light">⚙️ 設定</a>
             </div>
             <div class="card-body">
-                <table class="table table-sm">
-                    <tr>
-                        <td>消費獲得積分</td>
-                        <td><strong>1 元 = 1 點</strong></td>
-                    </tr>
-                    <tr>
-                        <td>積分折抵</td>
-                        <td><strong>1 點 = 1 元</strong></td>
-                    </tr>
-                    <tr>
-                        <td>適用品級</td>
-                        <td><strong>小鳳梨（含）以上</strong></td>
-                    </tr>
-                </table>
-                <p class="text-muted small mb-0">
-                    * 規則直接寫入系統，未來可擴充為可設定參數
-                </p>
+                @if (settings != null && settings.IsEnabled)
+                {
+                    <table class="table table-sm">
+                        <tr>
+                            <td>消費獲得積分</td>
+                            <td><strong class="text-success">@settings.EarnRate 點 / 元</strong></td>
+                        </tr>
+                        <tr>
+                            <td>積分折抵</td>
+                            <td><strong class="text-info">@settings.RedeemRate 元 / 點</strong></td>
+                        </tr>
+                        <tr>
+                            <td>最低折抵門檻</td>
+                            <td><strong>@settings.MinRedeemPoints 點</strong></td>
+                        </tr>
+                        <tr>
+                            <td>適用會員</td>
+                            <td>
+                                <strong>
+                                    @if (settings.ApplicableLevelId == 0)
+                                    {
+                                        <span class="text-success">全部會員</span>
+                                    }
+                                    else
+                                    {
+                                        var applicableLevel = levels?.FirstOrDefault(l => l.Id == settings.ApplicableLevelId);
+                                        <span>@(applicableLevel?.Name ?? "未知")（含）以上</span>
+                                    }
+                                </strong>
+                            </td>
+                        </tr>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-secondary mb-0">
+                        <strong>⚠️ 積分功能已停用</strong>
+                    </div>
+                }
             </div>
         </div>
     </div>

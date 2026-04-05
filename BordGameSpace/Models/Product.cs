@@ -22,12 +22,9 @@ public class Product
     [Column(TypeName = "decimal(10,0)")]
     public decimal Price { get; set; } = 0;
 
-    [Column(TypeName = "decimal(10,0)")]
-    public decimal? Cost { get; set; }
+    public int? Stock { get; set; }
 
-    public int Stock { get; set; } = 0;
-
-    public int LowStockAlert { get; set; } = 5;
+    public int LowStockAlert { get; set; } = 1;
 
     [MaxLength(500)]
     public string? ImageUrl { get; set; }
@@ -37,6 +34,11 @@ public class Product
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+    /// <summary>
+    /// 是否為服務項目（true = 不扣庫存，如遊玩服務、空間租借）
+    /// </summary>
+    public bool IsService { get; set; } = false;
 
     // Navigation
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

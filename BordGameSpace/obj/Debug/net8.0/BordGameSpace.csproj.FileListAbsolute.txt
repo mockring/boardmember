@@ -269,3 +269,6 @@
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.pdb
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.genruntimeconfig.cache
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/ref/BordGameSpace.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/runtimes/linux-musl-riscv64/native/libe_sqlite3.so
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/runtimes/linux-musl-s390x/native/libe_sqlite3.so
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/runtimes/linux-riscv64/native/libe_sqlite3.so

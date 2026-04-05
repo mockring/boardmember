@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<Event> Events { get; set; }
     public DbSet<RestockRecord> RestockRecords { get; set; }
     public DbSet<Admin> Admins { get; set; }
+    public DbSet<PointSetting> PointSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -159,29 +160,29 @@ public class AppDbContext : DbContext
             new Level
             {
                 Id = 1,
-                Name = "金鑽鳳梨",
-                UpgradeThresholdHours = 50,
-                UpgradeThresholdAmount = 10000,
-                GameDiscount = 0.90m,
-                WeekdayHourlyRate = 50,
-                HolidayHourlyRate = 60,
-                SortOrder = 1,
-                IsDefault = false,
+                Name = "非會員",
+                UpgradeThresholdHours = 0,
+                UpgradeThresholdAmount = 0,
+                GameDiscount = 1.00m,
+                WeekdayHourlyRate = 60,
+                HolidayHourlyRate = 70,
+                SortOrder = 0,
+                IsDefault = true,
                 IsDeletable = false,
                 CreatedAt = new DateTime(2024, 1, 1)
             },
             new Level
             {
                 Id = 2,
-                Name = "小鳳梨",
-                UpgradeThresholdHours = 0,
-                UpgradeThresholdAmount = 100,
-                GameDiscount = 0.95m,
-                WeekdayHourlyRate = 55,
-                HolidayHourlyRate = 65,
-                SortOrder = 2,
-                IsDefault = true,
-                IsDeletable = false,
+                Name = "會員",
+                UpgradeThresholdHours = 1000,
+                UpgradeThresholdAmount = 100000,
+                GameDiscount = 0.90m,
+                WeekdayHourlyRate = 50,
+                HolidayHourlyRate = 60,
+                SortOrder = 1,
+                IsDefault = false,
+                IsDeletable = true,
                 CreatedAt = new DateTime(2024, 1, 1)
             }
         );
@@ -197,6 +198,22 @@ public class AppDbContext : DbContext
                 Role = "Owner",
                 IsActive = true,
                 CreatedAt = new DateTime(2024, 1, 1)
+            }
+        );
+
+        // Seed Data - Default PointSettings
+        modelBuilder.Entity<PointSetting>().HasData(
+            new PointSetting
+            {
+                Id = 1,
+                EarnRate = 1m,
+                RedeemRate = 1m,
+                MinRedeemPoints = 100,
+                ApplicableLevelId = 0,
+                IsEnabled = true,
+                Description = "預設積分規則：消費 1 元獲得 1 積分，1 積分折抵 1 元",
+                CreatedAt = new DateTime(2024, 1, 1),
+                UpdatedAt = new DateTime(2024, 1, 1)
             }
         );
     }

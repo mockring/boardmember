@@ -1,0 +1,142 @@
+@model BordGameSpace.Models.PointSetting
+@{
+    ViewData["Title"] = "積分設定";
+    Layout = "_AdminLayout";
+    var levels = ViewBag.Levels as List<BordGameSpace.Models.Level>;
+}
+
+<h2>⚙️ 積分系統設定</h2>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        積分規則設定
+    </div>
+    <div class="card-body">
+        <form asp-action="SaveSettings" method="post">
+            <div class="row">
+                <!-- 左欄：主要設定 -->
+                <div class="col-md-6">
+                    <h5 class="mb-3">💰 積分獲得與折抵</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">消費獲得積分比率</label>
+                        <div class="input-group">
+                            <span class="input-group-text">每消費</span>
+                            <input type="number" asp-for="EarnRate" class="form-control" min="0" step="0.1" value="1" required />
+                            <span class="input-group-text">元 =</span>
+                            <input type="text" class="form-control" value="1 點" readonly />
+                        </div>
+                        <div class="form-text">
+                            範例：輸入 0.1 表示消費 10 元獲得 1 點；輸入 2 表示消費 1 元獲得 2 點
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">積分折抵金額比率</label>
+                        <div class="input-group">
+                            <span class="input-group-text">每</span>
+                            <input type="number" asp-for="RedeemRate" class="form-control" min="0" step="0.1" value="1" required />
+                            <span class="input-group-text">點 =</span>
+                            <input type="text" class="form-control" value="1 元" readonly />
+                        </div>
+                        <div class="form-text">
+                            範例：輸入 0.5 表示 2 點折抵 1 元；輸入 2 表示 1 點折抵 2 元
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">🚪 折抵門檻與資格</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">最低折抵積分門檻</label>
+                        <div class="input-group" style="max-width: 200px;">
+                            <input type="number" asp-for="MinRedeemPoints" class="form-control" min="0" value="100" required />
+                            <span class="input-group-text">點</span>
+                        </div>
+                        <div class="form-text">會員需累積滿此積分才能進行折抵（設為 0 則不限制）</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">適用會員範圍</label>
+                        <select asp-for="ApplicableLevelId" class="form-select" style="max-width: 250px;">
+                            <option value="0">全部會員</option>
+                            @foreach (var lv in levels!)
+                            {
+                                <option value="@lv.Id">@lv.Name（含）以上</option>
+                            }
+                        </select>
+                        <div class="form-text">選擇特定等級以上才能獲得與使用積分</div>
+                    </div>
+                </div>
+
+                <!-- 右欄：其他設定 -->
+                <div class="col-md-6">
+                    <h5 class="mb-3">🔧 其他設定</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">功能狀態</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="IsEnabled" checked />
+                            <label class="form-check-label" asp-for="IsEnabled">
+                                啟用積分功能
+                            </label>
+                        </div>
+                        <div class="form-text">停用後，消費將不再獲得積分，但仍可進行手動發放/扣回</div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label">設定說明（管理備註）</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" 
+                                  placeholder="輸入此設定的用途說明..."></textarea>
+                    </div>
+
+                    <!-- 預覽 -->
+                    <div class="alert alert-info">
+                        <h6>📊 設定預覽</h6>
+                        <ul class="mb-0">
+                            <li>消費 <strong>100 元</strong> → 獲得 <strong id="previewEarn">100</strong> 點</li>
+                            <li>使用 <strong id="previewMin">100</strong> 點 → 可折抵 <strong id="previewRedeem">100</strong> 元</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">← 返回積分管理</a>
+                <button type="submit" class="btn btn-primary">
+                    💾 儲存設定
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 動態更新預覽
+        const earnRate = document.getElementById('EarnRate');
+        const redeemRate = document.getElementById('RedeemRate');
+        const minPoints = document.getElementById('MinRedeemPoints');
+
+        function updatePreview() {
+            const earn = parseFloat(earnRate.value) || 0;
+            const redeem = parseFloat(redeemRate.value) || 0;
+            const min = parseInt(minPoints.value) || 0;
+
+            document.getElementById('previewEarn').textContent = Math.floor(100 * earn);
+            document.getElementById('previewRedeem').textContent = (min * redeem).toFixed(1);
+        }
+
+        earnRate.addEventListener('input', updatePreview);
+        redeemRate.addEventListener('input', updatePreview);
+        minPoints.addEventListener('input', updatePreview);
+
+        // 初始化預覽
+        updatePreview();
+    </script>
+}

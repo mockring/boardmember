@@ -115,4 +115,18 @@ public class LevelsController : BaseController
         TempData[success ? "SuccessMessage" : "ErrorMessage"] = message;
         return RedirectToAction("Index");
     }
+
+    /// <summary>
+    /// 將等級設為預設
+    /// </summary>
+    public async Task<IActionResult> SetDefault(int id)
+    {
+        if (!IsAdminLoggedIn)
+            return RedirectToAction("Login", "Admin");
+
+        var (success, message) = await _adminService.SetDefaultLevelAsync(id);
+
+        TempData[success ? "SuccessMessage" : "ErrorMessage"] = message;
+        return RedirectToAction("Index");
+    }
 }

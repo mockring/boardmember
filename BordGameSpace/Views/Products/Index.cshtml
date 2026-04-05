@@ -45,7 +45,6 @@
                     <th>名稱</th>
                     <th>類別</th>
                     <th>售價</th>
-                    <th>成本</th>
                     <th>庫存</th>
                     <th>狀態</th>
                     <th>操作</th>
@@ -68,12 +67,9 @@
                         <td>@product.Name</td>
                         <td>@product.Category</td>
                         <td>@product.Price.ToString("C0")</td>
-                        <td>
-                            @(product.Cost.HasValue ? product.Cost.Value.ToString("C0") : "-")
-                        </td>
                         <td class="@(product.Stock <= product.LowStockAlert ? "text-danger fw-bold" : "")">
-                            @product.Stock
-                            @if (product.Stock <= product.LowStockAlert)
+                            @(product.Stock?.ToString() ?? "-")
+                            @if (!product.IsService && product.Stock <= product.LowStockAlert)
                             {
                                 <span class="badge bg-warning">低庫存</span>
                             }
@@ -90,7 +86,10 @@
                         </td>
                         <td>
                             <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">編輯</a>
-                            <a asp-action="AdjustStock" asp-route-id="@product.Id" asp-route-quantity="1" class="btn btn-sm btn-outline-success">入庫</a>
+                            @if (!product.IsService)
+                            {
+                                <a asp-action="AdjustStock" asp-route-id="@product.Id" asp-route-quantity="1" class="btn btn-sm btn-outline-success">入庫</a>
+                            }
                             <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger"
                                onclick="return confirm('確定要刪除嗎？')">刪除</a>
                         </td>
