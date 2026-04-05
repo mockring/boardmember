@@ -36,7 +36,7 @@ public class PointSetting
     /// <summary>
     /// 是否啟用積分功能
     /// </summary>
-    public bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = false;
 
     /// <summary>
     /// 說明備註

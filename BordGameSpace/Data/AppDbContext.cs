@@ -210,7 +210,7 @@ public class AppDbContext : DbContext
                 RedeemRate = 1m,
                 MinRedeemPoints = 100,
                 ApplicableLevelId = 0,
-                IsEnabled = true,
+                IsEnabled = false,
                 Description = "預設積分規則：消費 1 元獲得 1 積分，1 積分折抵 1 元",
                 CreatedAt = new DateTime(2024, 1, 1),
                 UpdatedAt = new DateTime(2024, 1, 1)
