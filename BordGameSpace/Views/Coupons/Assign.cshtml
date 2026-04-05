@@ -1,0 +1,134 @@
+@model BordGameSpace.Models.Coupon
+@{
+    ViewData["Title"] = "發放優惠券";
+    Layout = "_AdminLayout";
+}
+
+<h2>🎫 發放優惠券 — @Model.Name</h2>
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        優惠券資訊
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>類型：</strong>
+                @(Model.CouponType == "FixedAmount" ? "折價" : "折扣%")
+            </div>
+            <div class="col-md-3">
+                <strong>折扣值：</strong>
+                @(Model.CouponType == "FixedAmount" ? $"{Model.DiscountValue:C0} 元" : $"{Model.DiscountValue}%")
+            </div>
+            <div class="col-md-3">
+                <strong>有效期限：</strong>
+                @Model.ValidFrom:yyyy-MM ~ @Model.ValidUntil:yyyy-MM
+            </div>
+            <div class="col-md-3">
+                <strong>發行數量：</strong> @Model.TotalQuantity
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 發放給指定會員 -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        發放給指定會員
+    </div>
+    <div class="card-body">
+        <form asp-action="Assign" method="post" class="row g-3">
+            <input type="hidden" name="couponId" value="@Model.Id" />
+            <div class="col-md-4">
+                <label class="form-label">會員電話</label>
+                <input name="phone" class="form-control" placeholder="輸入電話查詢" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">選擇會員（搜尋結果）</label>
+                <select name="memberId" class="form-select" id="memberSelect" required>
+                    <option value="">— 先搜尋電話 —</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">發放</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 大量發放 -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                發放給所有會員
+            </div>
+            <div class="card-body">
+                <p>一鍵發放給所有已啟用的會員（每人一張）</p>
+                <form asp-action="AssignToAll" method="post">
+                    <input type="hidden" name="couponId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success"
+                            onclick="return confirm('確定要發放給所有會員嗎？')">
+                        🚀 發放給所有會員
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                依等級發放
+            </div>
+            <div class="card-body">
+                <form asp-action="AssignByLevel" method="post">
+                    <input type="hidden" name="couponId" value="@Model.Id" />
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <select name="levelId" class="form-select" required>
+                                <option value="">— 選擇等級 —</option>
+                                <option value="1">金鑽鳳梨</option>
+                                <option value="2">小鳳梨</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-warning">發放</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">返回列表</a>
+</div>
+
+@section Scripts {
+    <script>
+        // 簡單電話搜尋
+        document.querySelector('input[name="phone"]').addEventListener('change', async function () {
+            const phone = this.value.trim();
+            if (!phone) return;
+
+            const res = await fetch(`/Coupons/SearchMembers?phone=${encodeURIComponent(phone)}`);
+            const members = await res.json();
+
+            const select = document.getElementById('memberSelect');
+            select.innerHTML = '<option value="">— 選擇會員 —</option>';
+
+            if (members.length === 0) {
+                alert('找不到該電話的會員');
+                return;
+            }
+
+            members.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.text = `${m.name} (${m.phone}) — ${m.levelName}`;
+                select.appendChild(opt);
+            });
+        });
+    </script>
+}

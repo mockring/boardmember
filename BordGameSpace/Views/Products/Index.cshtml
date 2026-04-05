@@ -1,0 +1,102 @@
+@model IEnumerable<BordGameSpace.Models.Product>
+@{
+    ViewData["Title"] = "商品管理";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>📦 商品管理</h2>
+    <a asp-action="Create" class="btn btn-primary">新增商品</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">所有類別</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <option value="@cat" selected="@(ViewBag.SelectedCategory == cat)">@cat</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="isActive" class="form-select">
+                    <option value="">所有狀態</option>
+                    <option value="true" selected="@(ViewBag.SelectedIsActive == true)">上架</option>
+                    <option value="false" selected="@(ViewBag.SelectedIsActive == false)">下架</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-secondary">篩選</button>
+                <a asp-action="Index" class="btn btn-outline-link">清除</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>圖片</th>
+                    <th>名稱</th>
+                    <th>類別</th>
+                    <th>售價</th>
+                    <th>成本</th>
+                    <th>庫存</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl" alt="" style="max-width:50px;max-height:50px;" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">無</span>
+                            }
+                        </td>
+                        <td>@product.Name</td>
+                        <td>@product.Category</td>
+                        <td>@product.Price.ToString("C0")</td>
+                        <td>
+                            @(product.Cost.HasValue ? product.Cost.Value.ToString("C0") : "-")
+                        </td>
+                        <td class="@(product.Stock <= product.LowStockAlert ? "text-danger fw-bold" : "")">
+                            @product.Stock
+                            @if (product.Stock <= product.LowStockAlert)
+                            {
+                                <span class="badge bg-warning">低庫存</span>
+                            }
+                        </td>
+                        <td>
+                            @if (product.IsActive)
+                            {
+                                <span class="badge bg-success">上架</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">下架</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                            <a asp-action="AdjustStock" asp-route-id="@product.Id" asp-route-quantity="1" class="btn btn-sm btn-outline-success">入庫</a>
+                            <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('確定要刪除嗎？')">刪除</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

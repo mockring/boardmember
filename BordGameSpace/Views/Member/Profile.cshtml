@@ -1,0 +1,78 @@
+@model BordGameSpace.Models.Member
+@{
+    ViewData["Title"] = "我的資料";
+    Layout = "_Layout";
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h4>@Model.Name</h4>
+                <span class="badge bg-primary">@Model.Level?.Name</span>
+            </div>
+        </div>
+        <div class="list-group">
+            <a asp-action="Profile" class="list-group-item list-group-item-action active">我的資料</a>
+            <a asp-action="Orders" class="list-group-item list-group-item-action">我的訂單</a>
+            <a asp-action="Coupons" class="list-group-item list-group-item-action">我的優惠券</a>
+            <a asp-action="Points" class="list-group-item list-group-item-action">我的積分</a>
+            <a asp-action="ChangePassword" class="list-group-item list-group-item-action">修改密碼</a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">會員資料</h5>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                }
+
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">姓名</th>
+                        <td>@Model.Name</td>
+                    </tr>
+                    <tr>
+                        <th>電話</th>
+                        <td>@Model.Phone</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>@Model.Email</td>
+                    </tr>
+                    <tr>
+                        <th>生日</th>
+                        <td>@(Model.Birthday?.ToString("yyyy-MM-dd") ?? "未填寫")</td>
+                    </tr>
+                    <tr>
+                        <th>會員等級</th>
+                        <td>
+                            <span class="badge bg-primary">@Model.Level?.Name</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>累積遊玩時數</th>
+                        <td>@Model.TotalPlayHours 小時</td>
+                    </tr>
+                    <tr>
+                        <th>累積消費金額</th>
+                        <td>@Model.TotalSpending.ToString("C0")</td>
+                    </tr>
+                    <tr>
+                        <th>註冊日期</th>
+                        <td>@Model.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                </table>
+
+                <div class="mt-3">
+                    <a asp-action="Edit" class="btn btn-primary">編輯資料</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

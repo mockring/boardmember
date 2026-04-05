@@ -1,0 +1,100 @@
+@model IEnumerable<BordGameSpace.Models.MemberCoupon>
+@{
+    ViewData["Title"] = "優惠券使用情形";
+    Layout = "_AdminLayout";
+    var coupon = ViewBag.Coupon as BordGameSpace.Models.Coupon;
+}
+
+<h2>🎫 使用情形 — @coupon?.Name</h2>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>類型：</strong>
+                @(coupon?.CouponType == "FixedAmount" ? "折價" : "折扣%")
+            </div>
+            <div class="col-md-3">
+                <strong>折扣值：</strong>
+                @(coupon?.CouponType == "FixedAmount"
+                    ? $"{coupon?.DiscountValue:C0} 元"
+                    : $"{coupon?.DiscountValue}%")
+            </div>
+            <div class="col-md-3">
+                <strong>有效期限：</strong>
+                @coupon?.ValidFrom:yyyy-MM ~ @coupon?.ValidUntil:yyyy-MM
+            </div>
+            <div class="col-md-3">
+                <strong>統計：</strong>
+                持有 @(Model.Count(m => m.UsedAt == null)) / 已使用 @(Model.Count(m => m.UsedAt != null))
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>會員姓名</th>
+                    <th>電話</th>
+                    <th>領取日期</th>
+                    <th>使用日期</th>
+                    <th>使用訂單</th>
+                    <th>狀態</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var mc in Model)
+                {
+                    <tr>
+                        <td>@mc.Member?.Name</td>
+                        <td>@mc.Member?.Phone</td>
+                        <td>@mc.ReceivedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            @if (mc.UsedAt.HasValue)
+                            {
+                                @mc.UsedAt.Value.ToString("yyyy-MM-dd HH:mm")
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (mc.OrderId.HasValue)
+                            {
+                                <a asp-controller="Orders" asp-action="Index" asp-route-id="@mc.OrderId">#@mc.OrderId</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (mc.UsedAt != null)
+                            {
+                                <span class="badge bg-success">已使用</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">未使用</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">尚無任何人領取</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">返回列表</a>
+</div>

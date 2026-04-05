@@ -1,0 +1,202 @@
+@{
+    ViewData["Title"] = "後台管理";
+    Layout = "_AdminLayout";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">📊 後台儀表板</h2>
+    </div>
+</div>
+
+<!-- 快速功能按鈕 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a asp-controller="Pos" asp-action="Index" class="btn btn-primary btn-lg w-100 py-3">
+            <i class="bi bi-cart-fill"></i> 🚀 快速消費 POS
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a asp-controller="PlayRecords" asp-action="Index" class="btn btn-success btn-lg w-100 py-3">
+            <i class="bi bi-controller"></i> 🎮 現場遊玩紀錄
+        </a>
+    </div>
+</div>
+
+<!-- 今日概覽卡片 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">@ViewBag.TodayOrderCount</h3>
+                <p>今日訂單數</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">@ViewBag.TodayRevenue.ToString("N0")</h3>
+                <p>今日營收</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">@ViewBag.ActivePlayCount</h3>
+                <p>遊玩中</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-danger">@ViewBag.LowStockCount</h3>
+                <p>低庫存警示</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 進行中的遊玩名單 -->
+@if (ViewBag.ActivePlays != null && ((List<BordGameSpace.Models.PlayRecord>)ViewBag.ActivePlays).Any())
+{
+    var activePlays = (List<BordGameSpace.Models.PlayRecord>)ViewBag.ActivePlays;
+    var hasUnpaid = activePlays.Any(p => p.Status == "Completed");
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card @(hasUnpaid ? "border-danger" : "border-info")">
+                <div class="card-header @(hasUnpaid ? "bg-danger text-white" : "bg-info text-white")">
+                    @(hasUnpaid ? "⚠️ 待結帳顧客" : "🎮 進行中的遊玩") (@activePlays.Count 人)
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>電話</th>
+                                <th>開始時間</th>
+                                <th>已玩時數</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var play in activePlays)
+                            {
+                                <tr class="@(play.Status == "Completed" ? "table-warning" : "")">
+                                    <td>@play.MemberName</td>
+                                    <td>@play.MemberPhone</td>
+                                    <td>@play.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        @{
+                                            var elapsed = DateTime.Now - play.StartTime;
+                                            var hours = Math.Floor(elapsed.TotalHours);
+                                            var mins = elapsed.Minutes;
+                                            <text>@hours 小時 @mins 分</text>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (play.Status == "Playing")
+                                        {
+                                            <span class="badge bg-success">遊玩中</span>
+                                        }
+                                        else if (play.Status == "Completed")
+                                        {
+                                            <span class="badge bg-warning text-dark">待結帳</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (play.Status == "Playing")
+                                        {
+                                            <a asp-controller="PlayRecords" asp-action="EndPlay" asp-route-id="@play.Id" class="btn btn-sm btn-outline-primary">結束遊玩</a>
+                                        }
+                                        else if (play.Status == "Completed")
+                                        {
+                                            <a asp-controller="Pos" asp-action="CheckoutPlay" asp-route-playId="@play.Id" class="btn btn-sm btn-warning">結帳</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 低庫存警示 -->
+@if (ViewBag.LowStockCount > 0)
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    ⚠️ 低庫存警示 (@ViewBag.LowStockCount 項商品)
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>商品名稱</th>
+                                <th>類別</th>
+                                <th>當前庫存</th>
+                                <th>警示值</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in ViewBag.LowStockProducts)
+                            {
+                                <tr>
+                                    <td>@p.Name</td>
+                                    <td>@p.Category</td>
+                                    <td class="text-danger">@p.Stock</td>
+                                    <td>@p.LowStockAlert</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 功能快捷入口 -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3><a asp-controller="Levels" asp-action="Index">🏅</a></h3>
+                <p>等級管理</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3><a asp-controller="Products" asp-action="Index">📦</a></h3>
+                <p>商品管理</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3><a asp-controller="Members" asp-action="Index">👥</a></h3>
+                <p>會員管理</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3><a asp-controller="Orders" asp-action="Index">🧾</a></h3>
+                <p>訂單管理</p>
+            </div>
+        </div>
+    </div>
+</div>

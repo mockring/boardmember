@@ -1,0 +1,95 @@
+@model BordGameSpace.Models.Product
+@{
+    ViewData["Title"] = "新增商品";
+    Layout = "_AdminLayout";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">新增商品</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">商品名稱 *</label>
+                                <input asp-for="Name" class="form-control" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Category" class="form-label">類別 *</label>
+                                <input asp-for="Category" class="form-control" list="categoryList" placeholder="桌遊/零食/飲料" required />
+                                <datalist id="categoryList">
+                                    @foreach (var cat in ViewBag.Categories)
+                                    {
+                                        <option value="@cat">@cat</option>
+                                    }
+                                </datalist>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">說明</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="Price" class="form-label">售價 *</label>
+                                <input asp-for="Price" type="number" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="Cost" class="form-label">成本</label>
+                                <input asp-for="Cost" type="number" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="Stock" class="form-label">庫存</label>
+                                <input asp-for="Stock" type="number" class="form-control" value="0" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="LowStockAlert" class="form-label">低庫存警示值</label>
+                                <input asp-for="LowStockAlert" type="number" class="form-control" value="5" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="ImageUrl" class="form-label">圖片網址</label>
+                                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="IsActive" type="checkbox" class="form-check-input" checked />
+                        <label asp-for="IsActive" class="form-check-label">上架</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">儲存</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,502 @@
+@{
+    ViewData["Title"] = "快速消費 POS";
+    Layout = "_AdminLayout";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">🚀 快速消費 POS</h2>
+    </div>
+</div>
+
+<!-- 會員搜尋 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-search"></i> 會員搜尋
+            </div>
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="text" id="phoneInput" class="form-control" placeholder="輸入電話號碼" maxlength="20">
+                    <button class="btn btn-primary" type="button" onclick="searchMember()">
+                        <i class="bi bi-search"></i> 搜尋
+                    </button>
+                </div>
+                <div id="memberInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong id="memberName"></strong>（<span id="memberLevel"></span>）
+                        <br>電話：<span id="memberPhone"></span>
+                        <br>累積消費：<span id="memberSpending"></span> 元｜累積時數：<span id="memberHours"></span> 小時
+                        <br>可用積分：<span id="memberPoints" class="text-warning"></span> 點
+                    </div>
+                    <input type="hidden" id="memberId">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearMember()">清除會員</button>
+                </div>
+                <div id="nonMemberInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-person"></i> 非會員
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <!-- 優惠券 -->
+        <div class="card" id="couponCard" style="display: none;">
+            <div class="card-header">
+                <i class="bi bi-ticket"></i> 可用優惠券
+            </div>
+            <div class="card-body">
+                <div id="couponList" class="list-group"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 商品選擇 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cart"></i> 商品選擇
+            </div>
+            <div class="card-body">
+                <!-- 類別篩選 -->
+                <div class="mb-3">
+                    <button class="btn btn-outline-primary btn-sm category-filter active" data-category="all">全部</button>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <button class="btn btn-outline-primary btn-sm category-filter" data-category="@cat">@cat</button>
+                    }
+                </div>
+                <!-- 商品列表 -->
+                <div class="row" id="productList">
+                    @foreach (var product in ViewBag.Products)
+                    {
+                        <div class="col-md-3 mb-3 product-item" data-category="@product.Category" data-product-id="@product.Id" data-price="@product.Price" data-name="@product.Name">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h6>@product.Name</h6>
+                                    <p class="text-primary mb-1">$@product.Price</p>
+                                    <p class="small text-muted mb-2">庫存: @product.Stock</p>
+                                    <div class="input-group input-group-sm mx-auto" style="width: 100px;">
+                                        <button class="btn btn-outline-secondary" onclick="decreaseQty(@product.Id)">-</button>
+                                        <input type="number" id="qty_@product.Id" class="form-control text-center" value="0" min="0" max="@product.Stock" readonly>
+                                        <button class="btn btn-outline-secondary" onclick="increaseQty(@product.Id)">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 購物車摘要 -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cart3"></i> 購物車
+            </div>
+            <div class="card-body">
+                <table class="table" id="cartTable">
+                    <thead>
+                        <tr>
+                            <th>商品名稱</th>
+                            <th>單價</th>
+                            <th>數量</th>
+                            <th>小計</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                        <tr id="emptyCart">
+                            <td colspan="5" class="text-center text-muted">購物車是空的</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <!-- 積分折抵 -->
+        <div class="card mb-3" id="pointsCard" style="display: none;">
+            <div class="card-header">
+                <i class="bi bi-gem"></i> 積分折抵
+            </div>
+            <div class="card-body">
+                <p>可用積分：<span id="availablePoints" class="text-warning"></span> 點</p>
+                <div class="input-group">
+                    <input type="number" id="pointsToUse" class="form-control" value="0" min="0">
+                    <button class="btn btn-outline-primary" onclick="applyPoints()">套用</button>
+                </div>
+                <small class="text-muted">1 點 = 1 元</small>
+            </div>
+        </div>
+
+        <!-- 金額摘要 -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-receipt"></i> 結帳摘要
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>商品金額</td>
+                        <td class="text-end" id="subtotal">$0</td>
+                    </tr>
+                    <tr id="levelDiscountRow" style="display: none;">
+                        <td>會員折扣</td>
+                        <td class="text-end text-success" id="levelDiscount">-$0</td>
+                    </tr>
+                    <tr id="couponDiscountRow" style="display: none;">
+                        <td>優惠券</td>
+                        <td class="text-end text-success" id="couponDiscount">-$0</td>
+                    </tr>
+                    <tr id="pointsDiscountRow" style="display: none;">
+                        <td>積分折抵</td>
+                        <td class="text-end text-success" id="pointsDiscount">-$0</td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td><strong>應收金額</strong></td>
+                        <td class="text-end"><strong id="finalAmount">$0</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">
+                            可獲得積分：<span id="pointsEarned">0</span> 點
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 操作區 -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">付款方式</label>
+                        <select id="paymentMethod" class="form-select">
+                            <option value="Cash">現金</option>
+                            <option value="Transfer">轉帳</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">備註（選填）</label>
+                        <input type="text" id="notes" class="form-control" placeholder="例如：促銷活動、特殊情況...">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-success btn-lg" onclick="createOrder()" id="checkoutBtn" disabled>
+                        <i class="bi bi-check-circle"></i> 確認結帳
+                    </button>
+                    <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> 取消
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let cart = [];
+        let memberData = null;
+        let coupons = [];
+        let selectedCouponId = null;
+        let levelDiscount = 0;
+
+        // 搜尋會員
+        async function searchMember() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) {
+                alert('請輸入電話號碼');
+                return;
+            }
+
+            try {
+                const response = await fetch('/Pos/SearchMember', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'phone=' + encodeURIComponent(phone)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.isMember) {
+                        memberData = data.member;
+                        document.getElementById('memberInfo').style.display = 'block';
+                        document.getElementById('nonMemberInfo').style.display = 'none';
+                        document.getElementById('memberId').value = data.member.id;
+                        document.getElementById('memberName').textContent = data.member.name;
+                        document.getElementById('memberLevel').textContent = data.member.levelName;
+                        document.getElementById('memberPhone').textContent = data.member.phone;
+                        document.getElementById('memberSpending').textContent = data.member.totalSpending?.toLocaleString() || 0;
+                        document.getElementById('memberHours').textContent = data.member.totalPlayHours || 0;
+                        document.getElementById('memberPoints').textContent = data.points;
+                        document.getElementById('availablePoints').textContent = data.points;
+                        document.getElementById('pointsCard').style.display = 'block';
+
+                        // 顯示優惠券
+                        if (data.coupons && data.coupons.length > 0) {
+                            coupons = data.coupons;
+                            document.getElementById('couponCard').style.display = 'block';
+                            const couponList = document.getElementById('couponList');
+                            couponList.innerHTML = '<div class="list-group-item"><div class="form-check"><input class="form-check-input" type="radio" name="coupon" id="coupon_none" checked><label class="form-check-label" for="coupon_none">不使用優惠券</label></div></div>';
+                            coupons.forEach(c => {
+                                const desc = c.couponType === 'FixedAmount' ? `折 ${c.discountValue} 元` : `打 ${c.discountValue / 10} 折`;
+                                couponList.innerHTML += `<div class="list-group-item"><div class="form-check"><input class="form-check-input" type="radio" name="coupon" id="coupon_${c.id}" value="${c.id}"><label class="form-check-label" for="coupon_${c.id}">${c.name}（${desc}）</label></div></div>`;
+                            });
+                        } else {
+                            document.getElementById('couponCard').style.display = 'none';
+                        }
+                    } else {
+                        memberData = null;
+                        document.getElementById('memberInfo').style.display = 'none';
+                        document.getElementById('nonMemberInfo').style.display = 'block';
+                        document.getElementById('memberId').value = '';
+                        document.getElementById('pointsCard').style.display = 'none';
+                        document.getElementById('couponCard').style.display = 'none';
+                    }
+                } else {
+                    alert(data.message);
+                }
+            } catch (e) {
+                alert('搜尋失敗: ' + e.message);
+            }
+        }
+
+        // 清除會員
+        function clearMember() {
+            memberData = null;
+            coupons = [];
+            selectedCouponId = null;
+            document.getElementById('phoneInput').value = '';
+            document.getElementById('memberInfo').style.display = 'none';
+            document.getElementById('nonMemberInfo').style.display = 'none';
+            document.getElementById('memberId').value = '';
+            document.getElementById('pointsCard').style.display = 'none';
+            document.getElementById('couponCard').style.display = 'none';
+            updateCart();
+        }
+
+        // 類別篩選
+        document.querySelectorAll('.category-filter').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.category-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const category = this.dataset.category;
+                document.querySelectorAll('.product-item').forEach(item => {
+                    item.style.display = (category === 'all' || item.dataset.category === category) ? 'block' : 'none';
+                });
+            });
+        });
+
+        // 增加數量
+        function increaseQty(productId) {
+            const input = document.getElementById('qty_' + productId);
+            const max = parseInt(input.max);
+            const current = parseInt(input.value);
+            if (current < max) {
+                input.value = current + 1;
+                updateCart();
+            }
+        }
+
+        // 減少數量
+        function decreaseQty(productId) {
+            const input = document.getElementById('qty_' + productId);
+            const current = parseInt(input.value);
+            if (current > 0) {
+                input.value = current - 1;
+                updateCart();
+            }
+        }
+
+        // 更新購物車
+        function updateCart() {
+            cart = [];
+            let subtotal = 0;
+
+            document.querySelectorAll('.product-item').forEach(item => {
+                const qtyInput = document.getElementById('qty_' + item.dataset.productId);
+                const qty = parseInt(qtyInput.value) || 0;
+                if (qty > 0) {
+                    const price = parseFloat(item.dataset.price);
+                    const name = item.dataset.name;
+                    cart.push({
+                        itemType: 'Product',
+                        itemId: parseInt(item.dataset.productId),
+                        itemName: name,
+                        unitPrice: price,
+                        quantity: qty
+                    });
+                    subtotal += price * qty;
+                }
+            });
+
+            // 更新表格
+            const tbody = document.getElementById('cartBody');
+            if (cart.length === 0) {
+                tbody.innerHTML = '<tr id="emptyCart"><td colspan="5" class="text-center text-muted">購物車是空的</td></tr>';
+                document.getElementById('subtotal').textContent = '$0';
+                document.getElementById('finalAmount').textContent = '$0';
+                document.getElementById('pointsEarned').textContent = '0';
+                document.getElementById('checkoutBtn').disabled = true;
+                return;
+            }
+
+            let html = '';
+            cart.forEach((item, index) => {
+                html += `<tr>
+                    <td>${item.itemName}</td>
+                    <td>$${item.unitPrice}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${(item.unitPrice * item.quantity).toLocaleString()}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="removeItem(${index})">移除</button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+
+            // 計算折扣
+            calculateDiscount();
+        }
+
+        // 移除商品
+        function removeItem(index) {
+            const item = cart[index];
+            const input = document.getElementById('qty_' + item.itemId);
+            if (input) input.value = 0;
+            updateCart();
+        }
+
+        // 計算折扣
+        async function calculateDiscount() {
+            if (cart.length === 0) return;
+
+            // 會員等級折扣
+            levelDiscount = 0;
+            if (memberData && memberData.gameDiscount) {
+                cart.forEach(item => {
+                    // 假設桌遊類別有折扣
+                    levelDiscount += item.unitPrice * (1 - memberData.gameDiscount) * item.quantity;
+                });
+            }
+
+            // 優惠券
+            selectedCouponId = null;
+            const selectedCoupon = document.querySelector('input[name="coupon"]:checked');
+            if (selectedCoupon && selectedCoupon.value !== 'none') {
+                selectedCouponId = parseInt(selectedCoupon.value);
+            }
+
+            // 積分
+            const pointsToUse = parseInt(document.getElementById('pointsToUse').value) || 0;
+
+            try {
+                const response = await fetch('/Pos/CalculateDiscount', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        memberId: memberData?.id || null,
+                        cartItems: cart,
+                        couponId: selectedCouponId,
+                        pointsToUse: pointsToUse
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('subtotal').textContent = '$' + data.subtotal.toLocaleString();
+                    document.getElementById('finalAmount').textContent = '$' + Math.round(data.finalAmount).toLocaleString();
+                    document.getElementById('pointsEarned').textContent = data.pointsEarned;
+
+                    // 等級折扣
+                    if (data.levelDiscount > 0) {
+                        document.getElementById('levelDiscountRow').style.display = '';
+                        document.getElementById('levelDiscount').textContent = '-$' + Math.round(data.levelDiscount).toLocaleString();
+                    } else {
+                        document.getElementById('levelDiscountRow').style.display = 'none';
+                    }
+
+                    // 優惠券
+                    if (data.couponDiscount > 0) {
+                        document.getElementById('couponDiscountRow').style.display = '';
+                        document.getElementById('couponDiscount').textContent = '-$' + Math.round(data.couponDiscount).toLocaleString();
+                    } else {
+                        document.getElementById('couponDiscountRow').style.display = 'none';
+                    }
+
+                    // 積分
+                    if (data.pointsDiscount > 0) {
+                        document.getElementById('pointsDiscountRow').style.display = '';
+                        document.getElementById('pointsDiscount').textContent = '-$' + data.pointsDiscount.toLocaleString();
+                    } else {
+                        document.getElementById('pointsDiscountRow').style.display = 'none';
+                    }
+
+                    document.getElementById('checkoutBtn').disabled = false;
+                }
+            } catch (e) {
+                console.error('計算折扣失敗:', e);
+            }
+        }
+
+        // 套用積分
+        function applyPoints() {
+            calculateDiscount();
+        }
+
+        // 建立訂單
+        async function createOrder() {
+            if (cart.length === 0) {
+                alert('購物車是空的');
+                return;
+            }
+
+            const btn = document.getElementById('checkoutBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
+
+            try {
+                const response = await fetch('/Pos/CreateOrder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        memberId: memberData?.id || null,
+                        cartItems: cart,
+                        couponId: selectedCouponId,
+                        pointsToUse: parseInt(document.getElementById('pointsToUse').value) || 0,
+                        notes: document.getElementById('notes').value,
+                        paymentMethod: document.getElementById('paymentMethod').value
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`訂單建立成功！\n訂單編號：${data.orderId}\n實收金額：$${data.finalAmount.toLocaleString()}\n獲得積分：${data.pointsEarned} 點`);
+                    window.location.href = '/Admin';
+                } else {
+                    alert('錯誤: ' + data.message);
+                }
+            } catch (e) {
+                alert('建立訂單失敗: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> 確認結帳';
+            }
+        }
+
+        // 初始更新
+        updateCart();
+    </script>
+}

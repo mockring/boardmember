@@ -1,0 +1,193 @@
+@{
+    ViewData["Title"] = "積分設定";
+    Layout = "_AdminLayout";
+    var leaderboard = ViewBag.Leaderboard as List<(BordGameSpace.Models.Member Member, int Balance)>;
+    var levels = ViewBag.Levels as List<BordGameSpace.Models.Level>;
+}
+
+<h2>🏆 積分管理</h2>
+
+<div class="row mb-4">
+    <!-- 積分規則 -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                📋 積分規則
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>消費獲得積分</td>
+                        <td><strong>1 元 = 1 點</strong></td>
+                    </tr>
+                    <tr>
+                        <td>積分折抵</td>
+                        <td><strong>1 點 = 1 元</strong></td>
+                    </tr>
+                    <tr>
+                        <td>適用品級</td>
+                        <td><strong>小鳳梨（含）以上</strong></td>
+                    </tr>
+                </table>
+                <p class="text-muted small mb-0">
+                    * 規則直接寫入系統，未來可擴充為可設定參數
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 大量發放積分 -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                🚀 大量發放積分
+            </div>
+            <div class="card-body">
+                <!-- 發放給所有會員 -->
+                <form asp-action="AddPointsToAll" method="post" class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <input name="points" type="number" class="form-control" placeholder="積分數量" min="1" required />
+                    </div>
+                    <div class="col-md-5">
+                        <input name="description" type="text" class="form-control" placeholder="說明（選填）" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100"
+                                onclick="return confirm('確定要發放給所有會員嗎？')">
+                            發放給所有會員
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 依等級發放 -->
+                <form asp-action="AddPointsByLevel" method="post" class="row g-2">
+                    <div class="col-md-3">
+                        <select name="levelId" class="form-select" required>
+                            <option value="">— 選擇等級 —</option>
+                            @foreach (var lv in levels!)
+                            {
+                                <option value="@lv.Id">@lv.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input name="points" type="number" class="form-control" placeholder="積分數量" min="1" required />
+                    </div>
+                    <div class="col-md-4">
+                        <input name="description" type="text" class="form-control" placeholder="說明（選填）" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-warning w-100">依等級發放</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 積分排行榜 -->
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        🏆 積分排行榜 TOP 20
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>姓名</th>
+                    <th>電話</th>
+                    <th>等級</th>
+                    <th>積分餘額</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int rank = 1;
+                }
+                @foreach (var (member, balance) in leaderboard!)
+                {
+                    <tr>
+                        <td>
+                            @if (rank <= 3)
+                            {
+                                <span class="badge bg-warning text-dark">🏅 @rank</span>
+                            }
+                            else
+                            {
+                                <span>@rank</span>
+                            }
+                        </td>
+                        <td>@member.Name</td>
+                        <td>@member.Phone</td>
+                        <td>@member.Level?.Name</td>
+                        <td><strong class="text-primary">@balance.ToString("N0")</strong></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showAdjustModal('@member.Id', '@member.Name', '@balance')">
+                                調整
+                            </button>
+                        </td>
+                    </tr>
+                    rank++;
+                }
+                @if (!leaderboard.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">尚無積分資料</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 調整積分 Modal -->
+<div class="modal fade" id="adjustModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">調整積分</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>會員：<strong id="modalMemberName"></strong></p>
+                <p>目前餘額：<strong id="modalBalance" class="text-primary"></strong></p>
+                <hr>
+                <!-- 發放積分 -->
+                <form asp-action="AddPoints" method="post" class="mb-3">
+                    <input type="hidden" name="memberId" id="modalMemberId" />
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">➕ 發放積分</span>
+                        <input name="points" type="number" class="form-control" min="1" placeholder="輸入數量" required />
+                        <input name="description" type="text" class="form-control" placeholder="說明" />
+                        <button type="submit" class="btn btn-success">發放</button>
+                    </div>
+                </form>
+                <!-- 扣回積分 -->
+                <form asp-action="DeductPoints" method="post">
+                    <input type="hidden" name="memberId" id="modalMemberId2" />
+                    <div class="input-group">
+                        <span class="input-group-text">➖ 扣回積分</span>
+                        <input name="points" type="number" class="form-control" min="1" placeholder="輸入數量" required />
+                        <input name="description" type="text" class="form-control" placeholder="說明" />
+                        <button type="submit" class="btn btn-danger">扣回</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showAdjustModal(memberId, memberName, balance) {
+            document.getElementById('modalMemberId').value = memberId;
+            document.getElementById('modalMemberId2').value = memberId;
+            document.getElementById('modalMemberName').textContent = memberName;
+            document.getElementById('modalBalance').textContent = Number(balance).toLocaleString();
+
+            new bootstrap.Modal(document.getElementById('adjustModal')).show();
+        }
+    </script>
+}

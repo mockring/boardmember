@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "首頁";
+    Layout = "_Layout";
+}
+
+<div class="text-center">
+    <h1 class="display-4 mb-4">🎲 歡迎來到菠德桌上遊戲空間</h1>
+    <p class="lead mb-5">享受最好玩的桌遊體驗</p>
+</div>
+
+@if (ViewBag.IsLoggedIn == true)
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4>👋 @(ViewBag.MemberName)，歡迎回来！</h4>
+                    <p class="mb-1">您的會員等級：<strong>@ViewBag.MemberLevel</strong></p>
+                    <a asp-controller="Member" asp-action="Profile" class="btn btn-outline-primary btn-sm">查看會員資料</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row mt-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>加入會員，享受專屬福利</h5>
+                    <ul class="list-unstyled mb-4 text-start">
+                        <li>✅ 遊戲購買折扣</li>
+                        <li>✅ 場地費優惠</li>
+                        <li>✅ 累積消費可升級</li>
+                    </ul>
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-primary">立即註冊</a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary">會員登入</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h3>🎮</h3>
+                <h5>桌遊租借</h5>
+                <p>數百款桌遊任你挑選</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h3>🏠</h3>
+                <h5>空間租借</h5>
+                <p>舒適的遊戲環境</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h3>🕐</h3>
+                <h5>計時遊玩</h5>
+                <p>彈性計時，想玩多久就玩多久</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,128 @@
+@model IEnumerable<BordGameSpace.Models.MemberCoupon>
+@{
+    ViewData["Title"] = "我的優惠券";
+    Layout = "_Layout";
+    var now = DateTime.Now;
+    var available = Model.Where(mc => mc.Coupon != null && mc.Coupon.IsActive && mc.UsedAt == null && mc.Coupon.ValidUntil >= now && mc.Coupon.ValidFrom <= now).ToList();
+    var used = Model.Where(mc => mc.UsedAt != null).ToList();
+    var expired = Model.Where(mc => mc.Coupon != null && mc.UsedAt == null && mc.Coupon.ValidUntil < now).ToList();
+    var notStarted = Model.Where(mc => mc.Coupon != null && mc.UsedAt == null && mc.Coupon.ValidFrom > now).ToList();
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h4>@ViewBag.MemberName</h4>
+                <span class="badge bg-primary">@ViewBag.MemberLevel</span>
+            </div>
+        </div>
+        <div class="list-group">
+            <a asp-action="Index" asp-controller="Member" class="list-group-item list-group-item-action">會員專區</a>
+            <a asp-action="Profile" class="list-group-item list-group-item-action">我的資料</a>
+            <a asp-action="Orders" class="list-group-item list-group-item-action">我的訂單</a>
+            <a asp-action="Coupons" class="list-group-item list-group-item-action active">我的優惠券</a>
+            <a asp-action="Points" class="list-group-item list-group-item-action">我的積分</a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <!-- 可使用的優惠券 -->
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                🎫 可使用 (@available.Count)
+            </div>
+            <div class="card-body">
+                @if (!available.Any())
+                {
+                    <p class="text-muted">目前沒有可使用的優惠券</p>
+                }
+                else
+                {
+                    <div class="row">
+                        @foreach (var mc in available)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@mc.Coupon!.Name</h5>
+                                        <p class="card-text">
+                                            @if (mc.Coupon.CouponType == "FixedAmount")
+                                            {
+                                                <text>折價 @(mc.Coupon.DiscountValue.ToString("N0")) 元</text>
+                                            }
+                                            else
+                                            {
+                                                <text>折扣 @(mc.Coupon.DiscountValue)%</text>
+                                            }
+                                            @if (mc.Coupon.MinPurchase > 0)
+                                            {
+                                                <br><small class="text-muted">滿 @(mc.Coupon.MinPurchase.ToString("N0")) 元</small>
+                                            }
+                                        </p>
+                                        <p class="small text-muted mb-0">
+                                            期限：@mc.Coupon.ValidFrom:yyyy-MM ~ @mc.Coupon.ValidUntil:yyyy-MM
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 已使用的優惠券 -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-secondary text-white">
+                        ✅ 已使用 (@used.Count)
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var mc in used.Take(10))
+                        {
+                            <li class="list-group-item">
+                                <strong>@mc.Coupon?.Name</strong>
+                                <br><small class="text-muted">@mc.UsedAt:yyyy-MM-dd</small>
+                            </li>
+                        }
+                        @if (!used.Any())
+                        {
+                            <li class="list-group-item text-muted">尚無</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 已過期的優惠券 -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-danger text-white">
+                        ⏰ 已過期 / 尚未生效 (@(expired.Count + notStarted.Count))
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var mc in expired.Take(5))
+                        {
+                            <li class="list-group-item">
+                                <strong>@mc.Coupon?.Name</strong>
+                                <br><small class="text-muted">@mc.Coupon!.ValidUntil:yyyy-MM 到期</small>
+                            </li>
+                        }
+                        @foreach (var mc in notStarted.Take(5))
+                        {
+                            <li class="list-group-item">
+                                <strong>@mc.Coupon?.Name</strong>
+                                <br><small class="text-muted">@mc.Coupon!.ValidFrom:yyyy-MM 生效</small>
+                            </li>
+                        }
+                        @if (!expired.Any() && !notStarted.Any())
+                        {
+                            <li class="list-group-item text-muted">尚無</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

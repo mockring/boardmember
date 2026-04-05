@@ -1,0 +1,97 @@
+@model IEnumerable<BordGameSpace.Models.Coupon>
+@{
+    ViewData["Title"] = "優惠券管理";
+    Layout = "_AdminLayout";
+    var stats = ViewBag.Stats as Dictionary<int, (int Held, int Used)>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>🎫 優惠券管理</h2>
+    <a asp-action="Create" class="btn btn-primary">新增優惠券</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>名稱</th>
+                    <th>類型</th>
+                    <th>折扣</th>
+                    <th>適用範圍</th>
+                    <th>有效期限</th>
+                    <th>發行/已發</th>
+                    <th>已使用</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    var (held, used) = stats != null && stats.ContainsKey(c.Id) ? stats[c.Id] : (0, 0);
+                    var now = DateTime.Now;
+                    var isExpired = now > c.ValidUntil;
+                    var isNotStarted = now < c.ValidFrom;
+                    <tr>
+                        <td>@c.Name</td>
+                        <td>
+                            @(c.CouponType == "FixedAmount" ? "折價" : "折扣%")
+                        </td>
+                        <td>
+                            @(c.CouponType == "FixedAmount"
+                                ? $"{c.DiscountValue:C0} 元"
+                                : $"{c.DiscountValue}%")
+                            @if (c.MinPurchase > 0)
+                            {
+                                <br><small class="text-muted">滿 @c.MinPurchase 元</small>
+                            }
+                        </td>
+                        <td>
+                            @(c.ApplicableTo switch {
+                                "All" => "全部",
+                                "Product" => "商品",
+                                "Play" => "遊玩",
+                                "Space" => "空間",
+                                _ => c.ApplicableTo
+                            })
+                        </td>
+                        <td>
+                            @c.ValidFrom:yyyy-MM<br>~ @c.ValidUntil:yyyy-MM
+                        </td>
+                        <td>
+                            @c.TotalQuantity<br>
+                            <small class="text-muted">已發: @held</small>
+                        </td>
+                        <td>@used</td>
+                        <td>
+                            @if (!c.IsActive)
+                            {
+                                <span class="badge bg-secondary">停用</span>
+                            }
+                            else if (isExpired)
+                            {
+                                <span class="badge bg-danger">已過期</span>
+                            }
+                            else if (isNotStarted)
+                            {
+                                <span class="badge bg-warning text-dark">未開始</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">有效</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Assign" asp-route-id="@c.Id" class="btn btn-sm btn-outline-success">發放</a>
+                            <a asp-action="Usage" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">使用情形</a>
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('確定要刪除嗎？')">刪除</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+@model BordGameSpace.DTOs.RegisterDto
+@{
+    ViewData["Title"] = "會員註冊";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="text-center mb-4">會員註冊</h2>
+
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="請輸入姓名" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Phone" class="form-label">電話 <span class="text-danger">*</span></label>
+                        <input asp-for="Phone" class="form-control" placeholder="請輸入電話" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="請輸入Email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">密碼 <span class="text-danger">*</span></label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="請輸入密碼（至少6個字元）" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label">確認密碼 <span class="text-danger">*</span></label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="請再次輸入密碼" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Birthday" class="form-label">生日（選填）</label>
+                        <input asp-for="Birthday" type="date" class="form-control" />
+                        <span asp-validation-for="Birthday" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">註冊</button>
+                    </div>
+                </form>
+
+                <hr class="my-4" />
+
+                <p class="text-center">
+                    已有帳號？<a asp-action="Login">立即登入</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

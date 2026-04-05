@@ -1,0 +1,298 @@
+@{
+    ViewData["Title"] = "現場遊玩紀錄";
+    Layout = "_AdminLayout";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">🎮 現場遊玩紀錄</h2>
+    </div>
+</div>
+
+<!-- 快速新增 -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-play-circle"></i> 開始新遊玩
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">會員電話（選填）</label>
+                            <div class="input-group">
+                                <input type="text" id="phoneInput" class="form-control" placeholder="輸入電話號碼">
+                                <button class="btn btn-outline-primary" type="button" onclick="searchMember()">
+                                    <i class="bi bi-search"></i> 搜尋
+                                </button>
+                            </div>
+                        </div>
+                        <div id="memberInfo" class="alert alert-info mb-3" style="display: none;">
+                            <strong id="memberName"></strong>（<span id="memberLevel"></span>）
+                            <br>時單價：平日 <span id="weekdayRate"></span> 元/hr｜假日 <span id="holidayRate"></span> 元/hr
+                            <input type="hidden" id="memberId">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">顧客姓名（非會員必填）</label>
+                            <input type="text" id="customerName" class="form-control" placeholder="輸入姓名">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">電話（非會員必填）</label>
+                            <input type="text" id="customerPhone" class="form-control" placeholder="輸入電話">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">開始時間</label>
+                            <input type="datetime-local" id="startTime" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")">
+                        </div>
+                        <button class="btn btn-success btn-lg w-100" onclick="startPlay()">
+                            <i class="bi bi-play-fill"></i> 開始遊玩
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i> 計費說明
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>身份</th>
+                            <th>平日</th>
+                            <th>假日</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>小鳳梨</td>
+                            <td>$55/hr</td>
+                            <td>$65/hr</td>
+                        </tr>
+                        <tr>
+                            <td>金鑽鳳梨</td>
+                            <td>$50/hr</td>
+                            <td>$60/hr</td>
+                        </tr>
+                        <tr>
+                            <td>非會員</td>
+                            <td>$65/hr</td>
+                            <td>$75/hr</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="small text-muted mt-2">
+                    <i class="bi bi-alarm"></i> 計時方式：無條件進位（不滿1小時算1小時）
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 進行中的遊玩名單 -->
+<div class="row">
+    <div class="col-md-12">
+        @{
+            var activePlays = ViewBag.ActivePlays as List<BordGameSpace.Models.PlayRecord>;
+            var hasUnpaid = ViewBag.HasUnpaid as bool? ?? false;
+        }
+
+        <div class="card @(hasUnpaid ? "border-danger" : "border-info")">
+            <div class="card-header @(hasUnpaid ? "bg-danger text-white" : "bg-info text-white")">
+                @(hasUnpaid ? "⚠️ 待結帳顧客" : "🎮 進行中的遊玩") (@(activePlays?.Count ?? 0) 人)
+            </div>
+            <div class="card-body">
+                @if (activePlays == null || !activePlays.Any())
+                {
+                    <p class="text-center text-muted">目前沒有進行中的遊玩</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>姓名</th>
+                                    <th>電話</th>
+                                    <th>會員等級</th>
+                                    <th>開始時間</th>
+                                    <th>已玩時數</th>
+                                    <th>時單價</th>
+                                    <th>金額</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var play in activePlays)
+                                {
+                                    <tr class="@(play.Status == "Completed" ? "table-warning" : "")">
+                                        <td>@play.MemberName</td>
+                                        <td>@play.MemberPhone</td>
+                                        <td>@(play.Member?.Level?.Name ?? "非會員")</td>
+                                        <td>@play.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                        <td>
+                                            @{
+                                                var elapsed = (play.EndTime ?? DateTime.Now) - play.StartTime;
+                                                var hours = Math.Ceiling(elapsed.TotalHours);
+                                                <text>@hours 小時</text>
+                                            }
+                                        </td>
+                                        <td>$@play.HourlyRate</td>
+                                        <td class="text-end">$@((play.TotalHours ?? 0) * play.HourlyRate)</td>
+                                        <td>
+                                            @if (play.Status == "Playing")
+                                            {
+                                                <span class="badge bg-success">遊玩中</span>
+                                            }
+                                            else if (play.Status == "Completed")
+                                            {
+                                                <span class="badge bg-warning text-dark">待結帳</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (play.Status == "Playing")
+                                            {
+                                                <a asp-action="EndPlay" asp-route-id="@play.Id" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-stop-fill"></i> 結束
+                                                </a>
+                                            }
+                                            else if (play.Status == "Completed")
+                                            {
+                                                <a asp-controller="Pos" asp-action="CheckoutPlay" asp-route-playId="@play.Id" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-cart"></i> 結帳
+                                                </a>
+                                            }
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deletePlay(@play.Id)" @(play.Status == "CheckedOut" ? "disabled" : "")>
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let memberData = null;
+
+        // 搜尋會員
+        async function searchMember() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) {
+                alert('請輸入電話號碼');
+                return;
+            }
+
+            try {
+                const response = await fetch('/PlayRecords/SearchMember', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'phone=' + encodeURIComponent(phone)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.isMember) {
+                        memberData = data.member;
+                        document.getElementById('memberInfo').style.display = 'block';
+                        document.getElementById('memberId').value = data.member.id;
+                        document.getElementById('memberName').textContent = data.member.name;
+                        document.getElementById('memberLevel').textContent = data.member.levelName;
+                        document.getElementById('weekdayRate').textContent = data.member.weekdayHourlyRate;
+                        document.getElementById('holidayRate').textContent = data.member.holidayHourlyRate;
+                        document.getElementById('customerName').value = data.member.name;
+                        document.getElementById('customerPhone').value = data.member.phone;
+                    } else {
+                        memberData = null;
+                        document.getElementById('memberInfo').style.display = 'none';
+                        document.getElementById('memberId').value = '';
+                        document.getElementById('customerPhone').value = phone;
+                    }
+                }
+            } catch (e) {
+                alert('搜尋失敗');
+            }
+        }
+
+        // 開始遊玩
+        async function startPlay() {
+            const startTime = document.getElementById('startTime').value;
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerPhone = document.getElementById('customerPhone').value.trim();
+
+            // 驗證
+            if (!startTime) {
+                alert('請選擇開始時間');
+                return;
+            }
+
+            if (!memberData && !customerName) {
+                alert('非會員請填寫姓名');
+                return;
+            }
+
+            if (!memberData && !customerPhone) {
+                alert('非會員請填寫電話');
+                return;
+            }
+
+            try {
+                const response = await fetch('/PlayRecords/StartPlay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        memberId: memberData?.id || null,
+                        memberName: customerName || memberData?.name || '非會員',
+                        phone: customerPhone || memberData?.phone || '',
+                        startTime: new Date(startTime).toISOString()
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('錯誤: ' + data.message);
+                }
+            } catch (e) {
+                alert('新增失敗: ' + e.message);
+            }
+        }
+
+        // 刪除遊玩記錄
+        async function deletePlay(id) {
+            if (!confirm('確定要刪除這筆記錄嗎？')) return;
+
+            try {
+                const response = await fetch('/PlayRecords/Delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + id
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('錯誤: ' + data.message);
+                }
+            } catch (e) {
+                alert('刪除失敗');
+            }
+        }
+    </script>
+}

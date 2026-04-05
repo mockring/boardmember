@@ -1,0 +1,61 @@
+@model IEnumerable<BordGameSpace.Models.Level>
+@{
+    ViewData["Title"] = "等級管理";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>🏅 等級管理</h2>
+    <a asp-action="Create" class="btn btn-primary">新增等級</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>排序</th>
+                    <th>等級名稱</th>
+                    <th>升級時數門檻</th>
+                    <th>升級金額門檻</th>
+                    <th>遊戲折扣</th>
+                    <th>平日場地費</th>
+                    <th>假日場地費</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var level in Model)
+                {
+                    <tr>
+                        <td>@level.SortOrder</td>
+                        <td>
+                            @level.Name
+                            @if (level.IsDefault)
+                            {
+                                <span class="badge bg-success">預設</span>
+                            }
+                            @if (!level.IsDeletable)
+                            {
+                                <span class="badge bg-secondary">不可刪</span>
+                            }
+                        </td>
+                        <td>@level.UpgradeThresholdHours 小時</td>
+                        <td>@level.UpgradeThresholdAmount.ToString("C0")</td>
+                        <td>@((level.GameDiscount * 10).ToString("0.0")) 折</td>
+                        <td>@level.WeekdayHourlyRate 元/小時</td>
+                        <td>@level.HolidayHourlyRate 元/小時</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@level.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                            @if (level.IsDeletable)
+                            {
+                                <a asp-action="Delete" asp-route-id="@level.Id" class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('確定要刪除嗎？')">刪除</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

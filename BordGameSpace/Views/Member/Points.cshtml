@@ -1,0 +1,85 @@
+@model IEnumerable<BordGameSpace.Models.PointTransaction>
+@{
+    ViewData["Title"] = "我的積分";
+    Layout = "_Layout";
+    var balance = ViewBag.Balance as int? ?? 0;
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h4>@ViewBag.MemberName</h4>
+                <span class="badge bg-primary">@ViewBag.MemberLevel</span>
+            </div>
+        </div>
+        <div class="list-group">
+            <a asp-action="Index" asp-controller="Member" class="list-group-item list-group-item-action">會員專區</a>
+            <a asp-action="Profile" class="list-group-item list-group-item-action">我的資料</a>
+            <a asp-action="Orders" class="list-group-item list-group-item-action">我的訂單</a>
+            <a asp-action="Coupons" class="list-group-item list-group-item-action">我的優惠券</a>
+            <a asp-action="Points" class="list-group-item list-group-item-action active">我的積分</a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <!-- 積分餘額 -->
+        <div class="card mb-3 text-center">
+            <div class="card-body">
+                <h2 class="text-primary mb-0">@balance.ToString("N0")</h2>
+                <p class="text-muted mb-0">積分餘額</p>
+            </div>
+        </div>
+
+        <!-- 說明 -->
+        <div class="alert alert-info">
+            <strong>如何獲得積分：</strong>消費 1 元 = 1 點積分（小鳳梨含以上會員）<br>
+            <strong>如何使用：</strong>結帳時可選擇使用積分折抵，1 點 = 1 元
+        </div>
+
+        <!-- 異動紀錄 -->
+        <div class="card">
+            <div class="card-header">
+                📋 積分異動紀錄
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>異動</th>
+                            <th>說明</th>
+                            <th>餘額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tx in Model)
+                        {
+                            <tr>
+                                <td>@tx.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    @if (tx.Points > 0)
+                                    {
+                                        <span class="text-success">+@tx.Points.ToString("N0")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">@tx.Points.ToString("N0")</span>
+                                    }
+                                </td>
+                                <td>@tx.Description</td>
+                                <td>@tx.Balance.ToString("N0")</td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">尚無異動紀錄</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

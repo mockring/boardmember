@@ -1,0 +1,76 @@
+@model BordGameSpace.Models.Coupon
+@{
+    ViewData["Title"] = "編輯優惠券";
+    Layout = "_AdminLayout";
+}
+
+<h2>🎫 編輯優惠券</h2>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">優惠券名稱 *</label>
+                    <input asp-for="Name" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">優惠券類型 *</label>
+                    <select asp-for="CouponType" class="form-select">
+                        <option value="FixedAmount">折價（固定金額）</option>
+                        <option value="Percentage">折扣（百分比）</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">折扣值 *</label>
+                    <input asp-for="DiscountValue" class="form-control" type="number" min="1" step="1" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">最低消費</label>
+                    <input asp-for="MinPurchase" class="form-control" type="number" min="0" step="1" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">適用範圍 *</label>
+                    <select asp-for="ApplicableTo" class="form-select">
+                        <option value="All">全部</option>
+                        <option value="Product">僅商品</option>
+                        <option value="Play">僅遊玩</option>
+                        <option value="Space">僅空間</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">開始日期 *</label>
+                    <input asp-for="ValidFrom" class="form-control" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">截止日期 *</label>
+                    <input asp-for="ValidUntil" class="form-control" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">狀態</label>
+                    <div class="form-check mt-2">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label class="form-check-label" asp-for="IsActive">啟用</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>注意：</strong>修改發行數量不會影響已發放的數量，只影響未來可發放的數量。
+            </div>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">儲存</button>
+                <a asp-action="Index" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,78 @@
+@model IEnumerable<BordGameSpace.Models.Order>
+@{
+    ViewData["Title"] = "我的訂單";
+    Layout = "_Layout";
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h4>@ViewBag.MemberName</h4>
+                <span class="badge bg-primary">@ViewBag.MemberLevel</span>
+            </div>
+        </div>
+        <div class="list-group">
+            <a asp-action="Index" class="list-group-item list-group-item-action">會員專區</a>
+            <a asp-action="Profile" class="list-group-item list-group-item-action">我的資料</a>
+            <a asp-action="Orders" class="list-group-item list-group-item-action active">我的訂單</a>
+            <a asp-action="Coupons" class="list-group-item list-group-item-action">我的優惠券</a>
+            <a asp-action="Points" class="list-group-item list-group-item-action">我的積分</a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">我的訂單</h5>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center p-3">目前沒有訂單記錄</p>
+                }
+                else
+                {
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>類型</th>
+                                <th>金額</th>
+                                <th>付款狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td>@order.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        @(order.OrderType switch {
+                                            "Product" => "商品",
+                                            "Play" => "遊玩",
+                                            "Space" => "空間",
+                                            "GameRental" => "遊戲租借",
+                                            _ => order.OrderType
+                                        })
+                                    </td>
+                                    <td>@order.FinalAmount.ToString("C0")</td>
+                                    <td>
+                                        @if (order.PaymentStatus == "Paid")
+                                        {
+                                            <span class="badge bg-success">已付款</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">未付款</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
