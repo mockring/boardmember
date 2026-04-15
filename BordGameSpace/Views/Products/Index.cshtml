@@ -4,14 +4,20 @@
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>📦 商品管理</h2>
-    <a asp-action="Create" class="btn btn-primary">新增商品</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>📦 商品管理</h3>
+    <div>
+        <a asp-action="Import" class="btn btn-outline-secondary">匯入</a>
+        <a asp-action="Create" class="btn btn-primary">+ 新增商品</a>
+    </div>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="搜尋商品名稱" value="@ViewBag.Search" />
+            </div>
             <div class="col-md-3">
                 <select name="category" class="form-select">
                     <option value="">所有類別</option>
@@ -28,9 +34,9 @@
                     <option value="false" selected="@(ViewBag.SelectedIsActive == false)">下架</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-secondary">篩選</button>
-                <a asp-action="Index" class="btn btn-outline-link">清除</a>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">篩選</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
             </div>
         </form>
     </div>
@@ -38,7 +44,7 @@
 
 <div class="card">
     <div class="card-body">
-        <table class="table table-striped">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th>圖片</th>

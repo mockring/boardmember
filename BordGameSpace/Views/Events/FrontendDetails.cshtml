@@ -1,0 +1,94 @@
+@model BordGameSpace.Models.Event
+@{
+    ViewData["Title"] = "活動詳情";
+    Layout = "_Layout";
+
+    var isOpen = Model.Status == "RegistrationOpen" && DateTime.Now <= Model.RegistrationDeadline;
+    var registrationCount = Model.Registrations?.Count ?? 0;
+    var isFull = Model.MaxParticipants.HasValue && registrationCount >= Model.MaxParticipants.Value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🎪 @Model.Title</h3>
+    <a asp-action="FrontendIndex" class="btn btn-outline-secondary">返回月曆</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ImageUrl))
+{
+    <div class="mb-3">
+        <img src="@Model.ImageUrl" alt="@Model.Title" style="max-width:600px;width:100%;" />
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-md-2">活動日期</dt>
+            <dd class="col-md-4">@Model.EventDate.ToString("yyyy/MM/dd HH:mm")</dd>
+            <dt class="col-md-2">報名截止</dt>
+            <dd class="col-md-4">@Model.RegistrationDeadline.ToString("yyyy/MM/dd HH:mm")</dd>
+            <dt class="col-md-2">報名人數</dt>
+            <dd class="col-md-4">
+                @(Model.MaxParticipants.HasValue ? $"{registrationCount} / {Model.MaxParticipants}" : $"{registrationCount}（無上限）")
+            </dd>
+            <dt class="col-md-2">狀態</dt>
+            <dd class="col-md-4">
+                @if (Model.Status == "RegistrationOpen" && DateTime.Now <= Model.RegistrationDeadline)
+                {
+                    <span class="badge bg-success">報名中</span>
+                }
+                else if (Model.Status == "RegistrationClosed" || DateTime.Now > Model.RegistrationDeadline)
+                {
+                    <span class="badge bg-warning text-dark">報名截止</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">已結束</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">活動內容</div>
+    <div class="card-body" style="white-space: pre-line;">@Model.Content</div>
+</div>
+
+@if (isOpen && !isFull)
+{
+    <div class="mb-3">
+        <button type="button" class="btn btn-primary btn-lg" onclick="handleRegister()">🎉 我要報名</button>
+    </div>
+}
+else if (isFull)
+{
+    <div class="alert alert-warning">報名人數已額滿</div>
+}
+else
+{
+    <div class="alert alert-secondary">目前未開放報名</div>
+}
+
+@section Scripts {
+<script>
+function handleRegister() {
+    var isLoggedIn = @(ViewBag.IsLoggedIn == true ? "true" : "false");
+    if (isLoggedIn) {
+        window.location.href = '/Events/RegisterPage/@Model.Id';
+    } else {
+        alert('請先登入會員帳號');
+        window.location.href = '/Account/Login?returnUrl=/Events/FrontendDetails/@Model.Id';
+    }
+}
+</script>
+}

@@ -129,6 +129,9 @@ public class CouponsController : BaseController
         if (coupon == null)
             return NotFound();
 
+        var db = HttpContext.RequestServices.GetService<AppDbContext>();
+        var levels = await db.Levels.Where(l => l.IsDeletable).OrderBy(l => l.SortOrder).ToListAsync();
+        ViewBag.Levels = levels;
         return View(coupon);
     }
 

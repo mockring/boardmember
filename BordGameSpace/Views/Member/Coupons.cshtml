@@ -3,9 +3,9 @@
     ViewData["Title"] = "我的優惠券";
     Layout = "_Layout";
     var now = DateTime.Now;
-    var available = Model.Where(mc => mc.Coupon != null && mc.Coupon.IsActive && mc.UsedAt == null && mc.Coupon.ValidUntil >= now && mc.Coupon.ValidFrom <= now).ToList();
+    var available = Model.Where(mc => mc.Coupon != null && mc.Coupon.IsActive && mc.UsedAt == null && (mc.Coupon.ValidUntil == null || mc.Coupon.ValidUntil >= now) && mc.Coupon.ValidFrom <= now).ToList();
     var used = Model.Where(mc => mc.UsedAt != null).ToList();
-    var expired = Model.Where(mc => mc.Coupon != null && mc.UsedAt == null && mc.Coupon.ValidUntil < now).ToList();
+    var expired = Model.Where(mc => mc.Coupon != null && mc.UsedAt == null && mc.Coupon.ValidUntil != null && mc.Coupon.ValidUntil < now).ToList();
     var notStarted = Model.Where(mc => mc.Coupon != null && mc.UsedAt == null && mc.Coupon.ValidFrom > now).ToList();
 }
 
@@ -17,13 +17,7 @@
                 <span class="badge bg-primary">@ViewBag.MemberLevel</span>
             </div>
         </div>
-        <div class="list-group">
-            <a asp-action="Index" asp-controller="Member" class="list-group-item list-group-item-action">會員專區</a>
-            <a asp-action="Profile" class="list-group-item list-group-item-action">我的資料</a>
-            <a asp-action="Orders" class="list-group-item list-group-item-action">我的訂單</a>
-            <a asp-action="Coupons" class="list-group-item list-group-item-action active">我的優惠券</a>
-            <a asp-action="Points" class="list-group-item list-group-item-action">我的積分</a>
-        </div>
+        <partial name="_MemberNav" />
     </div>
 
     <div class="col-md-9">
@@ -61,7 +55,7 @@
                                             }
                                         </p>
                                         <p class="small text-muted mb-0">
-                                            期限：@mc.Coupon.ValidFrom:yyyy-MM ~ @mc.Coupon.ValidUntil:yyyy-MM
+                                            期限：@mc.Coupon.ValidFrom.ToString("yyyy/MM/dd") ~ @(mc.Coupon.ValidUntil?.ToString("yyyy/MM/dd") ?? "不限")
                                         </p>
                                     </div>
                                 </div>
@@ -84,7 +78,7 @@
                         {
                             <li class="list-group-item">
                                 <strong>@mc.Coupon?.Name</strong>
-                                <br><small class="text-muted">@mc.UsedAt:yyyy-MM-dd</small>
+                                <br><small class="text-muted">@mc.UsedAt?.ToString("yyyy/MM/dd") 使用</small>
                             </li>
                         }
                         @if (!used.Any())
@@ -106,14 +100,14 @@
                         {
                             <li class="list-group-item">
                                 <strong>@mc.Coupon?.Name</strong>
-                                <br><small class="text-muted">@mc.Coupon!.ValidUntil:yyyy-MM 到期</small>
+                                <br><small class="text-muted">@mc.Coupon!.ValidUntil?.ToString("yyyy/MM/dd") 到期</small>
                             </li>
                         }
                         @foreach (var mc in notStarted.Take(5))
                         {
                             <li class="list-group-item">
                                 <strong>@mc.Coupon?.Name</strong>
-                                <br><small class="text-muted">@mc.Coupon!.ValidFrom:yyyy-MM 生效</small>
+                                <br><small class="text-muted">@mc.Coupon!.ValidFrom.ToString("yyyy/MM/dd") 生效</small>
                             </li>
                         }
                         @if (!expired.Any() && !notStarted.Any())

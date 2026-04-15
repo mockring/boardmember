@@ -1,0 +1,156 @@
+@model IEnumerable<BordGameSpace.Models.GameRental>
+@{
+    ViewData["Title"] = "遊戲租借管理";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🎲 遊戲租借管理</h3>
+    <a asp-action="AdminCreate" class="btn btn-primary">+ 新增租借</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mb-4">@TempData["ErrorMessage"]</div>
+}
+
+<!-- 篩選 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3" method="get">
+            <div class="col-md-3">
+                <label class="form-label">狀態篩選</label>
+                <select name="status" class="form-select">
+                    <option value="">全部</option>
+                    <option value="Approved" selected="@(ViewBag.Status == "Approved")">已通過</option>
+                    <option value="Pending" selected="@(ViewBag.Status == "Pending")">審核中</option>
+                    <option value="Borrowed" selected="@(ViewBag.Status == "Borrowed")">已借出</option>
+                    <option value="Renewed" selected="@(ViewBag.Status == "Renewed")">已續借</option>
+                    <option value="Returned" selected="@(ViewBag.Status == "Returned")">已歸還</option>
+                    <option value="Overdue" selected="@(ViewBag.Status == "Overdue")">已逾期</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">篩選</button>
+                <a asp-action="AdminIndex" class="btn btn-outline-secondary">清除</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mb-4">目前沒有租借記錄</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>申請時間</th>
+                        <th>會員</th>
+                        <th>遊戲名稱</th>
+                        <th>借出日期</th>
+                        <th>取件日期</th>
+                        <th>應還日期</th>
+                        <th>歸還日期</th>
+                        <th>押金</th>
+                        <th>租金</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr class="@(r.Status == "Overdue" ? "table-danger" : (r.Status == "Pending" ? "table-warning" : ""))">
+                            <td>@r.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@r.Member?.Name (@r.Member?.Phone)</td>
+                            <td>@r.Product?.Name</td>
+                            <td>@r.BorrowDate.ToString("yyyy-MM-dd")</td>
+                            <td>@(r.PickupDate?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                            <td>@r.DueDate.ToString("yyyy-MM-dd")</td>
+                            <td>@(r.ReturnDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                            <td>@(r.Deposit > 0 ? r.Deposit.ToString("N0") + " 元" : "免押金")</td>
+                            <td>@r.RentalFee.ToString("N0") 元</td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">審核中</span>
+                                }
+                                else if (r.Status == "Approved")
+                                {
+                                    <span class="badge bg-primary">已通過</span>
+                                }
+                                else if (r.Status == "Borrowed")
+                                {
+                                    <span class="badge bg-primary">已借出</span>
+                                }
+                                else if (r.Status == "Renewed")
+                                {
+                                    <span class="badge bg-info">已續借</span>
+                                }
+                                else if (r.Status == "Returned")
+                                {
+                                    <span class="badge bg-success">已歸還</span>
+                                }
+                                else if (r.Status == "Overdue")
+                                {
+                                    <span class="badge bg-danger">已逾期</span>
+                                }
+                                else if (r.Status == "Rejected")
+                                {
+                                    <span class="badge bg-secondary">已拒絕</span>
+                                }
+                            </td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <a asp-action="Approve" asp-route-id="@r.Id" class="btn btn-sm btn-success"
+                                       onclick="return confirm('確定通過申請？')">通過</a>
+                                    <a asp-action="Reject" asp-route-id="@r.Id" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('確定取消申請？')">取消</a>
+                                }
+                                else if (r.Status == "Approved")
+                                {
+                                    <a asp-action="Borrow" asp-route-id="@r.Id" class="btn btn-sm btn-primary"
+                                       onclick="return confirm('確定已取貨借出？')">借出</a>
+                                }
+                                else if (r.Status == "Borrowed")
+                                {
+                                    <a asp-action="Return" asp-route-id="@r.Id" class="btn btn-sm btn-outline-success"
+                                       onclick="return confirm('確定已完成歸還？')">歸還</a>
+                                    @if (r.OrderId == null)
+                                    {
+                                        <a asp-action="CreateOrder" asp-route-id="@r.Id" class="btn btn-sm btn-primary">建立訂單</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">已開單</span>
+                                    }
+                                }
+                                else if (r.OrderId != null)
+                                {
+                                    <span class="badge bg-info">已開單</span>
+                                }
+                                @if (r.Status == "Pending" || r.Status == "Rejected")
+                                {
+                                    <form method="post" asp-action="Delete" asp-route-id="@r.Id" style="display:inline"
+                                          onsubmit="return confirm('確定刪除？')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

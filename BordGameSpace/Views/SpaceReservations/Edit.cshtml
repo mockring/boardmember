@@ -1,0 +1,75 @@
+@model BordGameSpace.Models.SpaceReservation
+@{
+    ViewData["Title"] = "編輯訂位預約";
+    Layout = "_AdminLayout";
+    var members = ViewBag.Members as List<BordGameSpace.Models.Member>;
+}
+
+<h2 class="mb-4">📅 編輯訂位預約</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+
+    <div class="card mb-4">
+        <div class="card-header">預約資訊</div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">會員姓名 <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" required value="@Model.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">電話 <span class="text-danger">*</span></label>
+                    <input type="text" name="phone" class="form-control" required value="@Model.Phone" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">預約日期 <span class="text-danger">*</span></label>
+                    <input type="date" name="reservationDate" class="form-control" required
+                           value="@Model.ReservationDate.ToString("yyyy-MM-dd")" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">開始時間 <span class="text-danger">*</span></label>
+                    <input type="time" name="startTime" class="form-control" required
+                           value="@Model.StartTime.ToString(@"hh\:mm")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">結束時間 <span class="text-danger">*</span></label>
+                    <input type="time" name="endTime" class="form-control" required
+                           value="@Model.EndTime.ToString(@"hh\:mm")" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">狀態</label>
+                    <select name="status" class="form-select">
+                        <option value="Pending" selected="@(Model.Status == "Pending")">審核中</option>
+                        <option value="Approved" selected="@(Model.Status == "Approved")">已通過</option>
+                        <option value="Rejected" selected="@(Model.Status == "Rejected")">已拒絕</option>
+                        <option value="Cancelled" selected="@(Model.Status == "Cancelled")">已取消</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">備註（選填）</label>
+                    <textarea name="notes" class="form-control" rows="2">@Model.Notes</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">儲存變更</button>
+        <a asp-action="AdminIndex" class="btn btn-outline-secondary">返回列表</a>
+    </div>
+</form>

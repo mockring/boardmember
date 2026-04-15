@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "匯入會員";
+    Layout = "_AdminLayout";
+}
+
+<h2>📥 匯入會員</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">📋 Excel 範本格式</h5>
+    </div>
+    <div class="card-body">
+        <p>請依照以下格式填寫 Excel 檔案：</p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm" style="max-width: 600px;">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Birthday</th>
+                        <th>LevelName</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>王小明</td>
+                        <td>0912345678</td>
+                        <td>example@email.com</td>
+                        <td>1990-01-15</td>
+                        <td>會員</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <ul class="text-muted small mt-2">
+            <li><strong>Name</strong> (必填)：會員姓名</li>
+            <li><strong>Phone</strong> (必填, 唯一)：電話號碼，若已存在則會跳過</li>
+            <li><strong>Email</strong> (必填)：電子郵件</li>
+            <li><strong>Birthday</strong> (選填, format: yyyy-MM-dd)：生日</li>
+            <li><strong>LevelName</strong> (選填, default: 會員)：會員等級名稱</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">📤 上傳 Excel 檔案</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" asp-action="Import">
+            <div class="mb-3">
+                <input type="file" name="file" class="form-control" accept=".xlsx" required />
+            </div>
+            <button type="submit" class="btn btn-primary">匯入</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">返回</a>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessCount"] != null || TempData["FailureCount"] != null)
+{
+    var successCount = Convert.ToInt32(TempData["SuccessCount"]);
+    var failureCount = Convert.ToInt32(TempData["FailureCount"]);
+
+    <div class="alert alert-success mt-3">
+        ✅ 成功匯入 @successCount 筆資料
+    </div>
+
+    @if (failureCount > 0)
+    {
+        <div class="alert alert-danger mt-3">
+            ❌ 失敗 @failureCount 筆資料
+            @if (TempData["FailureDetails"] != null)
+            {
+                <ul class="mb-0">
+                    @foreach (var detail in TempData["FailureDetails"]?.ToString()?.Split('\n') ?? Array.Empty<string>())
+                    {
+                        @if (!string.IsNullOrWhiteSpace(detail))
+                        {
+                            <li>@detail</li>
+                        }
+                    }
+                </ul>
+            }
+        </div>
+    }
+}

@@ -25,13 +25,14 @@ public class Coupon
     [MaxLength(50)]
     public string ApplicableTo { get; set; } = "All"; // All/Product/Play/Space
 
-    public int TotalQuantity { get; set; } = 0;
+    public int? TotalQuantity { get; set; } = null; // null = 不限張數, 0 = 已用完, >0 = 限張數
 
     public int UsedCount { get; set; } = 0;
 
     public DateTime ValidFrom { get; set; }
 
-    public DateTime ValidUntil { get; set; }
+
+    public DateTime? ValidUntil { get; set; } // null = 不限時間
 
     public bool IsActive { get; set; } = true;
 

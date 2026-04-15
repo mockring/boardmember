@@ -1,13 +1,22 @@
 @{
     ViewData["Title"] = "快速消費 POS";
     Layout = "_AdminLayout";
+
+    var isPlayCheckout = ViewBag.IsPlayCheckout as bool? ?? false;
+    var playRecord = ViewBag.PlayRecord as BordGameSpace.Models.PlayRecord;
 }
 
-<div class="row">
-    <div class="col-md-12">
-        <h2 class="mb-4">🚀 快速消費 POS</h2>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🚀 快速消費 POS</h3>
 </div>
+
+<!-- 遊玩結帳提示橫幅 -->
+@if (isPlayCheckout && playRecord != null)
+{
+    <div class="alert alert-warning mb-4">
+        <i class="bi bi-controller"></i> 遊玩結帳 mode — 請確認金額後直接點「確認結帳」按鈕
+    </div>
+}
 
 <!-- 會員搜尋 -->
 <div class="row mb-4">
@@ -28,7 +37,6 @@
                         <strong id="memberName"></strong>（<span id="memberLevel"></span>）
                         <br>電話：<span id="memberPhone"></span>
                         <br>累積消費：<span id="memberSpending"></span> 元｜累積時數：<span id="memberHours"></span> 小時
-                        <br>可用積分：<span id="memberPoints" class="text-warning"></span> 點
                     </div>
                     <input type="hidden" id="memberId">
                     <button class="btn btn-outline-secondary btn-sm" onclick="clearMember()">清除會員</button>
@@ -41,54 +49,61 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <!-- 優惠券 -->
-        <div class="card" id="couponCard" style="display: none;">
-            <div class="card-header">
-                <i class="bi bi-ticket"></i> 可用優惠券
-            </div>
-            <div class="card-body">
-                <div id="couponList" class="list-group"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- 商品選擇 -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-cart"></i> 商品選擇
-            </div>
-            <div class="card-body">
-                <!-- 類別篩選 -->
-                <div class="mb-3">
-                    <button class="btn btn-outline-primary btn-sm category-filter active" data-category="all">全部</button>
-                    @foreach (var cat in ViewBag.Categories)
-                    {
-                        <button class="btn btn-outline-primary btn-sm category-filter" data-category="@cat">@cat</button>
-                    }
+<!-- 商品選擇（遊玩結帳模式也顯示） -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-cart"></i> 商品選擇
                 </div>
-                <!-- 商品列表 -->
-                <div class="row" id="productList">
-                    @foreach (var product in ViewBag.Products)
-                    {
-                        <div class="col-md-3 mb-3 product-item" data-category="@product.Category" data-product-id="@product.Id" data-price="@product.Price" data-name="@product.Name">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <h6>@product.Name</h6>
-                                    <p class="text-primary mb-1">$@product.Price</p>
-                                    <p class="small text-muted mb-2">庫存: @(product.Stock?.ToString() ?? "-")</p>
-                                    <div class="input-group input-group-sm mx-auto" style="width: 100px;">
-                                        <button class="btn btn-outline-secondary" onclick="decreaseQty(@product.Id)">-</button>
-                                        <input type="number" id="qty_@product.Id" class="form-control text-center" value="0" min="0" max="@((product.Stock ?? 0) > 0 ? product.Stock : 100)" readonly>
-                                        <button class="btn btn-outline-secondary" onclick="increaseQty(@product.Id)">+</button>
+                <div class="card-body">
+                    <!-- 搜尋 & 類別篩選 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="productSearchInput" class="form-control" placeholder="搜尋商品名稱...">
+                                <button class="btn btn-primary" onclick="filterProductsBySearch()">
+                                    <i class="bi bi-search"></i> 搜尋
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 類別篩選 -->
+                    <div class="mb-3">
+                        <button class="btn btn-outline-primary btn-sm category-filter active" data-category="all">全部</button>
+                        @foreach (var cat in ViewBag.Categories)
+                        {
+                            <button class="btn btn-outline-primary btn-sm category-filter" data-category="@cat">@cat</button>
+                        }
+                    </div>
+                    <!-- 商品列表 -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span id="productCount" class="text-muted small"></span>
+                        <div>
+                            <button class="btn btn-sm btn-primary" id="prevPageBtn" onclick="prevPage()" disabled>&#8592; 上一頁</button>
+                            <button class="btn btn-sm btn-primary" id="nextPageBtn" onclick="nextPage()">下一頁 &#8594;</button>
+                        </div>
+                    </div>
+                    <div class="row" id="productList">
+                        @foreach (var product in ViewBag.Products)
+                        {
+                            <div class="col-md-3 mb-3 product-item" data-category="@product.Category" data-product-id="@product.Id" data-price="@product.Price" data-name="@product.Name">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <h6>@product.Name</h6>
+                                        <p class="text-primary mb-1">$@product.Price</p>
+                                        <p class="small text-muted mb-2">庫存: @(product.Stock?.ToString() ?? "-")</p>
+                                        <div class="input-group input-group-sm mx-auto" style="width: 100px;">
+                                            <button class="btn btn-outline-secondary" onclick="decreaseQty(@product.Id)">-</button>
+                                            <input type="number" id="qty_@product.Id" class="form-control text-center" value="0" min="0" max="@((product.Stock ?? 0) > 0 ? product.Stock : 100)" readonly>
+                                            <button class="btn btn-outline-secondary" onclick="increaseQty(@product.Id)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,13 +124,14 @@
                             <th>商品名稱</th>
                             <th>單價</th>
                             <th>數量</th>
+                            <th>折扣</th>
                             <th>小計</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="cartBody">
                         <tr id="emptyCart">
-                            <td colspan="5" class="text-center text-muted">購物車是空的</td>
+                            <td colspan="6" class="text-center text-muted">購物車是空的</td>
                         </tr>
                     </tbody>
                 </table>
@@ -123,21 +139,6 @@
         </div>
     </div>
     <div class="col-md-4">
-        <!-- 積分折抵 -->
-        <div class="card mb-3" id="pointsCard" style="display: none;">
-            <div class="card-header">
-                <i class="bi bi-gem"></i> 積分折抵
-            </div>
-            <div class="card-body">
-                <p>可用積分：<span id="availablePoints" class="text-warning"></span> 點</p>
-                <div class="input-group">
-                    <input type="number" id="pointsToUse" class="form-control" value="0" min="0">
-                    <button class="btn btn-outline-primary" onclick="applyPoints()">套用</button>
-                </div>
-                <small class="text-muted">1 點 = 1 元</small>
-            </div>
-        </div>
-
         <!-- 金額摘要 -->
         <div class="card">
             <div class="card-header bg-primary text-white">
@@ -149,26 +150,17 @@
                         <td>商品金額</td>
                         <td class="text-end" id="subtotal">$0</td>
                     </tr>
+                    <tr id="itemDiscountRow" style="display: none;">
+                        <td>商品折扣</td>
+                        <td class="text-end text-success" id="itemDiscount">-$0</td>
+                    </tr>
                     <tr id="levelDiscountRow" style="display: none;">
                         <td>會員折扣</td>
                         <td class="text-end text-success" id="levelDiscount">-$0</td>
                     </tr>
-                    <tr id="couponDiscountRow" style="display: none;">
-                        <td>優惠券</td>
-                        <td class="text-end text-success" id="couponDiscount">-$0</td>
-                    </tr>
-                    <tr id="pointsDiscountRow" style="display: none;">
-                        <td>積分折抵</td>
-                        <td class="text-end text-success" id="pointsDiscount">-$0</td>
-                    </tr>
                     <tr class="table-primary">
                         <td><strong>應收金額</strong></td>
                         <td class="text-end"><strong id="finalAmount">$0</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" class="text-center text-muted">
-                            可獲得積分：<span id="pointsEarned">0</span> 點
-                        </td>
                     </tr>
                 </table>
             </div>
@@ -195,10 +187,10 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <button class="btn btn-success btn-lg" onclick="createOrder()" id="checkoutBtn" disabled>
+                    <button class="btn btn-success btn-lg" onclick="handleCheckout()" id="checkoutBtn" @(isPlayCheckout ? "" : "disabled")>
                         <i class="bi bi-check-circle"></i> 確認結帳
                     </button>
-                    <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary btn-lg">
+                    <a asp-controller="PlayRecords" asp-action="Index" class="btn btn-secondary btn-lg">
                         <i class="bi bi-x-circle"></i> 取消
                     </a>
                 </div>
@@ -209,11 +201,39 @@
 
 @section Scripts {
     <script>
+        // PlayCheckout 模式標記（由後端 Razor 注入）
+        window.isPlayCheckout = @isPlayCheckout.ToString().ToLower();
+        window.playRecordId = @(playRecord?.Id ?? 0);
+        window.memberId = @(playRecord?.MemberId ?? 0);
+
         let cart = [];
         let memberData = null;
-        let coupons = [];
-        let selectedCouponId = null;
+        let availableCoupons = []; // 可用優惠券列表（for per-item discount dropdown）
         let levelDiscount = 0;
+        // Play fee 開關：避免 updateCart() 每次都重建並重複加入 play fee
+        let playFeeIncluded = window.isPlayCheckout && window.playRecordId > 0;
+
+        // PlayCheckout 模式：頁面載入時自動帶入會員的優惠券
+        if (window.isPlayCheckout && window.memberId > 0) {
+            loadMemberCoupons(window.memberId);
+        }
+
+        // ========== 通用函式 ==========
+
+        // 載入會員優惠券（PlayCheckout 模式，頁面載入時已有所屬會員）
+        async function loadMemberCoupons(memberId) {
+            if (!memberId || memberId <= 0) return;
+            try {
+                const response = await fetch('/Pos/GetAvailableCoupons?memberId=' + memberId);
+                const data = await response.json();
+                if (data.success) {
+                    availableCoupons = data.coupons || [];
+                    updateCartUI();
+                }
+            } catch (e) {
+                console.error('載入優惠券失敗', e);
+            }
+        }
 
         // 搜尋會員
         async function searchMember() {
@@ -234,6 +254,7 @@
                 if (data.success) {
                     if (data.isMember) {
                         memberData = data.member;
+                        availableCoupons = data.coupons || [];
                         document.getElementById('memberInfo').style.display = 'block';
                         document.getElementById('nonMemberInfo').style.display = 'none';
                         document.getElementById('memberId').value = data.member.id;
@@ -242,30 +263,12 @@
                         document.getElementById('memberPhone').textContent = data.member.phone;
                         document.getElementById('memberSpending').textContent = data.member.totalSpending?.toLocaleString() || 0;
                         document.getElementById('memberHours').textContent = data.member.totalPlayHours || 0;
-                        document.getElementById('memberPoints').textContent = data.points;
-                        document.getElementById('availablePoints').textContent = data.points;
-                        document.getElementById('pointsCard').style.display = 'block';
-
-                        // 顯示優惠券
-                        if (data.coupons && data.coupons.length > 0) {
-                            coupons = data.coupons;
-                            document.getElementById('couponCard').style.display = 'block';
-                            const couponList = document.getElementById('couponList');
-                            couponList.innerHTML = '<div class="list-group-item"><div class="form-check"><input class="form-check-input" type="radio" name="coupon" id="coupon_none" checked><label class="form-check-label" for="coupon_none">不使用優惠券</label></div></div>';
-                            coupons.forEach(c => {
-                                const desc = c.couponType === 'FixedAmount' ? `折 ${c.discountValue} 元` : `打 ${c.discountValue / 10} 折`;
-                                couponList.innerHTML += `<div class="list-group-item"><div class="form-check"><input class="form-check-input" type="radio" name="coupon" id="coupon_${c.id}" value="${c.id}"><label class="form-check-label" for="coupon_${c.id}">${c.name}（${desc}）</label></div></div>`;
-                            });
-                        } else {
-                            document.getElementById('couponCard').style.display = 'none';
-                        }
                     } else {
                         memberData = null;
+                        availableCoupons = [];
                         document.getElementById('memberInfo').style.display = 'none';
                         document.getElementById('nonMemberInfo').style.display = 'block';
                         document.getElementById('memberId').value = '';
-                        document.getElementById('pointsCard').style.display = 'none';
-                        document.getElementById('couponCard').style.display = 'none';
                     }
                 } else {
                     alert(data.message);
@@ -278,16 +281,40 @@
         // 清除會員
         function clearMember() {
             memberData = null;
-            coupons = [];
-            selectedCouponId = null;
+            availableCoupons = [];
             document.getElementById('phoneInput').value = '';
             document.getElementById('memberInfo').style.display = 'none';
             document.getElementById('nonMemberInfo').style.display = 'none';
             document.getElementById('memberId').value = '';
-            document.getElementById('pointsCard').style.display = 'none';
-            document.getElementById('couponCard').style.display = 'none';
             updateCart();
         }
+
+        // ========== 商品模式專用 ==========
+
+        // 搜尋商品（關鍵字即時篩選）
+        function filterProductsBySearch() {
+            const keyword = document.getElementById('productSearchInput').value.trim().toLowerCase();
+            filteredProductIds = new Set();
+            document.querySelectorAll('.product-item').forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const match = keyword === '' || name.includes(keyword);
+                if (match) filteredProductIds.add(item.dataset.productId);
+            });
+            currentPage = 1;
+            applyPagination();
+        }
+        document.getElementById('productSearchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') filterProductsBySearch();
+            if (this.value === '') { filterProductsBySearch(); }
+            else { applyPagination(); }
+        });
+
+        // 頁面載入時：初始化分頁（預設 all，分頁只顯示前 8 項）
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化篩選集合：全部商品
+            document.querySelectorAll('.product-item').forEach(item => filteredProductIds.add(item.dataset.productId));
+            applyPagination();
+        });
 
         // 類別篩選
         document.querySelectorAll('.category-filter').forEach(btn => {
@@ -295,11 +322,57 @@
                 document.querySelectorAll('.category-filter').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 const category = this.dataset.category;
+                const searchKeyword = document.getElementById('productSearchInput').value.trim().toLowerCase();
+                filteredProductIds = new Set();
                 document.querySelectorAll('.product-item').forEach(item => {
-                    item.style.display = (category === 'all' || item.dataset.category === category) ? 'block' : 'none';
+                    const matchCategory = category === 'all' || item.dataset.category === category;
+                    const matchSearch = searchKeyword === '' || item.dataset.name.toLowerCase().includes(searchKeyword);
+                    if (matchCategory && matchSearch) filteredProductIds.add(item.dataset.productId);
                 });
+                currentPage = 1;
+                applyPagination();
             });
         });
+
+        // 分頁相關
+        const PAGE_SIZE = 8;
+        let currentPage = 1;
+        let filteredProductIds = new Set(); // 記錄目前搜尋/篩選後的商品 ID
+
+        function getVisibleProducts() {
+            if (filteredProductIds.size === 0) {
+                return Array.from(document.querySelectorAll('.product-item')).filter(item => item.style.display !== 'none');
+            }
+            return Array.from(document.querySelectorAll('.product-item')).filter(item => filteredProductIds.has(item.dataset.productId));
+        }
+
+        function applyPagination() {
+            const visible = getVisibleProducts();
+            const total = visible.length;
+            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            document.getElementById('productCount').textContent = total === 0 ? '' : `顯示 ${(currentPage - 1) * PAGE_SIZE + 1} - ${Math.min(currentPage * PAGE_SIZE, total)} / 共 ${total} 項`;
+
+            // 所有商品先 hide，再用 filteredProductIds 決定誰該顯示
+            document.querySelectorAll('.product-item').forEach(item => { item.style.display = 'none'; });
+            visible.forEach((item, i) => {
+                if (i >= (currentPage - 1) * PAGE_SIZE && i < currentPage * PAGE_SIZE) {
+                    item.style.display = 'block';
+                }
+            });
+
+            document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) { currentPage--; applyPagination(); }
+        }
+        function nextPage() {
+            const total = getVisibleProducts().length;
+            if (currentPage < Math.ceil(total / PAGE_SIZE)) { currentPage++; applyPagination(); }
+        }
 
         // 增加數量
         function increaseQty(productId) {
@@ -325,7 +398,20 @@
         // 更新購物車
         function updateCart() {
             cart = [];
-            let subtotal = 0;
+
+            // PlayCheckout 模式：依據 playFeeIncluded 開關決定是否加入場地費
+            if (window.isPlayCheckout && window.playRecordId > 0 && playFeeIncluded) {
+                cart.push({
+                    itemType: 'Play',
+                    itemId: @(playRecord?.Id ?? 0),
+                    itemName: '場地費',
+                    unitPrice: @(playRecord?.Amount ?? 0),
+                    quantity: 1,
+                    discountType: 'None',
+                    discountValue: 0,
+                    couponId: null
+                });
+            }
 
             document.querySelectorAll('.product-item').forEach(item => {
                 const qtyInput = document.getElementById('qty_' + item.dataset.productId);
@@ -338,69 +424,125 @@
                         itemId: parseInt(item.dataset.productId),
                         itemName: name,
                         unitPrice: price,
-                        quantity: qty
+                        quantity: qty,
+                        discountType: 'None',
+                        discountValue: 0,
+                        couponId: null
                     });
-                    subtotal += price * qty;
                 }
             });
 
-            // 更新表格
+            updateCartUI();
+        }
+
+        // 產生折扣下拉選單
+        function getDiscountSelect(index, currentDiscountType, currentDiscountValue) {
+            let options = '<option value="None"' + (currentDiscountType === 'None' ? ' selected' : '') + '>無折扣</option>';
+            availableCoupons.forEach(c => {
+                const discountType = c.couponType === 'FixedAmount' ? 'FixedAmount' : 'Percentage';
+                const selected = (currentDiscountType === discountType && currentDiscountValue == c.discountValue) ? ' selected' : '';
+                const desc = c.couponType === 'FixedAmount' ? `-${c.discountValue}` : `${c.discountValue / 10}折`;
+                options += `<option value="${c.id}" data-type="${discountType}" data-value="${c.discountValue}"${selected}>${c.name} (${desc})</option>`;
+            });
+            return `<select class="form-select form-select-sm discount-select" data-index="${index}" style="width: 120px;">${options}</select>`;
+        }
+
+        // 計算該項目的小計
+        function calcItemSubtotal(item) {
+            let subtotal = item.unitPrice * item.quantity;
+            if (item.discountType === 'Percentage') {
+                subtotal -= subtotal * (item.discountValue / 100);
+            } else if (item.discountType === 'FixedAmount') {
+                subtotal -= item.discountValue * item.quantity;
+            }
+            return Math.max(0, subtotal);
+        }
+
+        // 更新購物車 UI（商品 + 遊玩共用）
+        function updateCartUI() {
             const tbody = document.getElementById('cartBody');
             if (cart.length === 0) {
-                tbody.innerHTML = '<tr id="emptyCart"><td colspan="5" class="text-center text-muted">購物車是空的</td></tr>';
+                tbody.innerHTML = '<tr id="emptyCart"><td colspan="6" class="text-center text-muted">購物車是空的</td></tr>';
                 document.getElementById('subtotal').textContent = '$0';
                 document.getElementById('finalAmount').textContent = '$0';
-                document.getElementById('pointsEarned').textContent = '0';
                 document.getElementById('checkoutBtn').disabled = true;
                 return;
             }
 
             let html = '';
             cart.forEach((item, index) => {
+                const itemSubtotal = calcItemSubtotal(item);
+                const isPlay = item.itemType === 'Play';
+                const qtyCell = isPlay 
+                    ? `<input type="number" class="form-control form-control-sm qty-input" data-index="${index}" value="${item.quantity}" min="1" style="width: 80px;">`
+                    : item.quantity;
                 html += `<tr>
                     <td>${item.itemName}</td>
                     <td>$${item.unitPrice}</td>
-                    <td>${item.quantity}</td>
-                    <td>$${(item.unitPrice * item.quantity).toLocaleString()}</td>
+                    <td>${qtyCell}</td>
+                    <td>${getDiscountSelect(index, item.discountType, item.discountValue)}</td>
+                    <td>$${itemSubtotal.toLocaleString()}</td>
                     <td><button class="btn btn-sm btn-danger" onclick="removeItem(${index})">移除</button></td>
                 </tr>`;
             });
             tbody.innerHTML = html;
 
-            // 計算折扣
+            // 綁定數量輸入框事件（Play 項目可編輯）
+            document.querySelectorAll('.qty-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    const newQty = parseInt(this.value) || 1;
+                    if (newQty >= 1) {
+                        cart[index].quantity = newQty;
+                        updateCartUI();
+                    }
+                });
+            });
+
+            // 綁定折扣下拉選單事件
+            document.querySelectorAll('.discount-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    const option = this.options[this.selectedIndex];
+                    if (option.value === 'None') {
+                        cart[index].discountType = 'None';
+                        cart[index].discountValue = 0;
+                        cart[index].couponId = null;
+                    } else {
+                        cart[index].discountType = option.dataset.type;
+                        cart[index].discountValue = parseFloat(option.dataset.value);
+                        cart[index].couponId = parseInt(option.value);
+                    }
+                    updateCartUI();
+                });
+            });
+
+
+            document.getElementById('checkoutBtn').disabled = false;
             calculateDiscount();
         }
 
-        // 移除商品
+        // 移除商品（支援刪除場地費）
         function removeItem(index) {
             const item = cart[index];
+            if (item.itemType === 'Play') {
+                // 僅在 play checkout 模式下允許刪除場地費
+                if (window.isPlayCheckout) {
+                    playFeeIncluded = false;
+                    updateCart();
+                }
+                return;
+            }
             const input = document.getElementById('qty_' + item.itemId);
             if (input) input.value = 0;
             updateCart();
         }
 
+        // ========== 計算邏輯 ==========
+
         // 計算折扣
         async function calculateDiscount() {
             if (cart.length === 0) return;
-
-            // 會員等級折扣
-            levelDiscount = 0;
-            if (memberData && memberData.gameDiscount) {
-                cart.forEach(item => {
-                    // 假設桌遊類別有折扣
-                    levelDiscount += item.unitPrice * (1 - memberData.gameDiscount) * item.quantity;
-                });
-            }
-
-            // 優惠券
-            selectedCouponId = null;
-            const selectedCoupon = document.querySelector('input[name="coupon"]:checked');
-            if (selectedCoupon && selectedCoupon.value !== 'none') {
-                selectedCouponId = parseInt(selectedCoupon.value);
-            }
-
-            // 積分
-            const pointsToUse = parseInt(document.getElementById('pointsToUse').value) || 0;
 
             try {
                 const response = await fetch('/Pos/CalculateDiscount', {
@@ -408,9 +550,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         memberId: memberData?.id || null,
-                        cartItems: cart,
-                        couponId: selectedCouponId,
-                        pointsToUse: pointsToUse
+                        cartItems: cart
                     })
                 });
                 const data = await response.json();
@@ -418,45 +558,70 @@
                 if (data.success) {
                     document.getElementById('subtotal').textContent = '$' + data.subtotal.toLocaleString();
                     document.getElementById('finalAmount').textContent = '$' + Math.round(data.finalAmount).toLocaleString();
-                    document.getElementById('pointsEarned').textContent = data.pointsEarned;
 
-                    // 等級折扣
+                    if (data.itemDiscount > 0) {
+                        document.getElementById('itemDiscountRow').style.display = '';
+                        document.getElementById('itemDiscount').textContent = '-$' + Math.round(data.itemDiscount).toLocaleString();
+                    } else {
+                        document.getElementById('itemDiscountRow').style.display = 'none';
+                    }
+
                     if (data.levelDiscount > 0) {
                         document.getElementById('levelDiscountRow').style.display = '';
                         document.getElementById('levelDiscount').textContent = '-$' + Math.round(data.levelDiscount).toLocaleString();
                     } else {
                         document.getElementById('levelDiscountRow').style.display = 'none';
                     }
-
-                    // 優惠券
-                    if (data.couponDiscount > 0) {
-                        document.getElementById('couponDiscountRow').style.display = '';
-                        document.getElementById('couponDiscount').textContent = '-$' + Math.round(data.couponDiscount).toLocaleString();
-                    } else {
-                        document.getElementById('couponDiscountRow').style.display = 'none';
-                    }
-
-                    // 積分
-                    if (data.pointsDiscount > 0) {
-                        document.getElementById('pointsDiscountRow').style.display = '';
-                        document.getElementById('pointsDiscount').textContent = '-$' + data.pointsDiscount.toLocaleString();
-                    } else {
-                        document.getElementById('pointsDiscountRow').style.display = 'none';
-                    }
-
-                    document.getElementById('checkoutBtn').disabled = false;
                 }
             } catch (e) {
                 console.error('計算折扣失敗:', e);
             }
         }
 
-        // 套用積分
-        function applyPoints() {
-            calculateDiscount();
+        // ========== 結帳路由 ==========
+
+        // 統一的結帳按鈕 handler
+        async function handleCheckout() {
+            if (window.isPlayCheckout) {
+                await confirmPlayCheckout();
+            } else {
+                await createOrder();
+            }
         }
 
-        // 建立訂單
+        // 遊玩結帳（更新 PlayRecord.Status → CheckedOut）
+        async function confirmPlayCheckout() {
+            const btn = document.getElementById('checkoutBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
+
+            try {
+                const response = await fetch('/Pos/ConfirmCheckoutPlay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        playId: window.playRecordId,
+                        paymentMethod: document.getElementById('paymentMethod').value,
+                        cartItems: cart
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`結帳成功！\n訂單編號：${data.orderId}\n實收金額：$${data.finalAmount.toLocaleString()}`);
+                    window.location.href = '/PlayRecords';
+                } else {
+                    alert('錯誤: ' + data.message);
+                }
+            } catch (e) {
+                alert('結帳失敗: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> 確認結帳';
+            }
+        }
+
+        // 一般商品結帳
         async function createOrder() {
             if (cart.length === 0) {
                 alert('購物車是空的');
@@ -474,8 +639,6 @@
                     body: JSON.stringify({
                         memberId: memberData?.id || null,
                         cartItems: cart,
-                        couponId: selectedCouponId,
-                        pointsToUse: parseInt(document.getElementById('pointsToUse').value) || 0,
                         notes: document.getElementById('notes').value,
                         paymentMethod: document.getElementById('paymentMethod').value
                     })
@@ -483,7 +646,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(`訂單建立成功！\n訂單編號：${data.orderId}\n實收金額：$${data.finalAmount.toLocaleString()}\n獲得積分：${data.pointsEarned} 點`);
+                    alert(`訂單建立成功！\n訂單編號：${data.orderId}\n實收金額：$${data.finalAmount.toLocaleString()}`);
                     window.location.href = '/Admin';
                 } else {
                     alert('錯誤: ' + data.message);
@@ -496,7 +659,28 @@
             }
         }
 
-        // 初始更新
-        updateCart();
+        // ========== 初始化 ==========
+
+        // PlayCheckout 模式：自動帶入遊玩費用，可再新增商品
+        if (window.isPlayCheckout && window.playRecordId > 0) {
+            // 啟用 play fee，透過 updateCart() 統一建構 cart
+            playFeeIncluded = true;
+            updateCart();
+
+            // 若有會員，自動帶入
+            @if (playRecord?.MemberId != null)
+            {
+                <text>
+                document.getElementById('phoneInput').value = '@playRecord.MemberPhone';
+                (async function autoLoadMember() {
+                    await searchMember();
+                })();
+                </text>
+            }
+        } else {
+            // 一般商品模式
+            playFeeIncluded = false;
+            updateCart();
+        }
     </script>
 }

@@ -29,10 +29,6 @@ public class Order
     [Column(TypeName = "decimal(10,0)")]
     public decimal FinalAmount { get; set; } = 0;
 
-    public int PointsUsed { get; set; } = 0;
-
-    public int PointsEarned { get; set; } = 0;
-
     public int? CouponId { get; set; }
 
     [MaxLength(50)]
@@ -50,5 +46,4 @@ public class Order
     public Member? Member { get; set; }
     public Coupon? Coupon { get; set; }
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-    public ICollection<PointTransaction> PointTransactions { get; set; } = new List<PointTransaction>();
 }

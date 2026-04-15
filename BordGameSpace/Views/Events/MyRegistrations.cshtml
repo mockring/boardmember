@@ -1,0 +1,52 @@
+@model IEnumerable<BordGameSpace.Models.EventRegistration>
+@{
+    ViewData["Title"] = "我的活動報名";
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🎪 我的活動報名</h3>
+    <a asp-action="FrontendIndex" class="btn btn-outline-secondary">返回活動月曆</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (!Model?.Any() ?? true)
+{
+    <div class="alert alert-info">尚未報名任何活動</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>活動名稱</th>
+                        <th>報名日期</th>
+                        <th>我的姓名</th>
+                        <th>我的電話</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var reg in Model!)
+                    {
+                        <tr>
+                            <td>@reg.Event?.Title</td>
+                            <td>@reg.Event?.EventDate.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>@reg.Name</td>
+                            <td>@reg.Phone</td>
+                            <td>
+                                <a asp-action="FrontendDetails" asp-route-id="@reg.EventId" class="btn btn-sm btn-outline-primary">查看詳情</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -1,0 +1,82 @@
+@{
+    ViewData["Title"] = "批次匯入進貨";
+    Layout = "_AdminLayout";
+}
+
+<h2 class="mb-4">📦 批次匯入進貨</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (TempData["SuccessCount"] != null || TempData["FailureCount"] != null)
+{
+    <div class="alert alert-success">成功匯入 @TempData["SuccessCount"] 筆進貨記錄</div>
+    @if ((int)TempData["FailureCount"]! > 0)
+    {
+        <div class="alert alert-danger">
+            <strong>@TempData["FailureCount"] 筆失敗：</strong>
+            <ul class="mb-0 mt-2">
+                @foreach (var detail in TempData["FailureDetails"]!.ToString()!.Split('\n'))
+                {
+                    <li>@detail</li>
+                }
+            </ul>
+        </div>
+    }
+}
+
+<!-- Excel 範本格式 -->
+<div class="card mb-4">
+    <div class="card-header">Excel 範本格式</div>
+    <div class="card-body">
+        <p class="text-muted">請依照以下格式準備 Excel 檔案（第一列為標題列，從第二列開始填入資料）：</p>
+        <table class="table table-bordered table-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>ProductName <span class="text-danger">*</span></th>
+                    <th>Quantity <span class="text-danger">*</span></th>
+                    <th>Supplier</th>
+                    <th>Phone</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>卡坦島</td>
+                    <td>10</td>
+                    <td>桌遊批發商</td>
+                    <td>0912345678</td>
+                    <td>補充庫存</td>
+                </tr>
+                <tr>
+                    <td>璀璨寶石</td>
+                    <td>5</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <small class="text-muted">
+            <span class="text-danger">*</span> 為必填欄位。ProductName 需與系統中的商品名稱完全相符，找不到商品時該筆記錄將略過。
+        </small>
+    </div>
+</div>
+
+<!-- 上傳表單 -->
+<div class="card">
+    <div class="card-header">上傳 Excel 檔案</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" asp-action="Import">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label class="form-label">選擇檔案（僅支援 .xlsx）</label>
+                <input type="file" name="file" class="form-control" accept=".xlsx" required />
+            </div>
+            <button type="submit" class="btn btn-primary">開始匯入</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">返回列表</a>
+        </form>
+    </div>
+</div>

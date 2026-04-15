@@ -1,0 +1,171 @@
+@{
+    ViewData["Title"] = "價目表";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <h2 class="mb-4 text-center">價目表</h2>
+
+        <!-- 現場遊玩 -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">現場遊玩</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th class="text-center">非會員</th>
+                            <th class="text-center">會員</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>場地費（平日）</td>
+                            <td class="text-center">$60/hr</td>
+                            <td class="text-center">$50/hr</td>
+                        </tr>
+                        <tr>
+                            <td>場地費（假日）</td>
+                            <td class="text-center">$70/hr</td>
+                            <td class="text-center">$60/hr</td>
+                        </tr>
+                        <tr>
+                            <td>包日（平日）</td>
+                            <td class="text-center">$240/天</td>
+                            <td class="text-center">$180/天</td>
+                        </tr>
+                        <tr>
+                            <td>包日（假日）</td>
+                            <td class="text-center">$280/天</td>
+                            <td class="text-center">$220/天</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 包廂 -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">包廂</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th class="text-center">非會員</th>
+                            <th class="text-center">會員</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>包廂費</td>
+                            <td class="text-center">$550/次</td>
+                            <td class="text-center">$450/次</td>
+                        </tr>
+                        <tr>
+                            <td>包日(含場地費)</td>
+                            <td class="text-center">$2800/天</td>
+                            <td class="text-center">$2400/天</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 遊戲 -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">遊戲</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th class="text-center">非會員</th>
+                            <th class="text-center">會員</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>購買遊戲</td>
+                            <td class="text-center">原價</td>
+                            <td class="text-center">9折</td>
+                        </tr>
+                        <tr>
+                            <td>租借遊戲</td>
+                            <td class="text-center">租金 + 押金</td>
+                            <td class="text-center">租金</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 優惠券 -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">優惠券</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th class="text-center">非會員</th>
+                            <th class="text-center">會員</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>生日禮</td>
+                            <td class="text-center text-muted">無</td>
+                            <td class="text-center">當月3人同行，壽星免場地費</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 其他收費 -->
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">其他收費</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th class="text-center">收費標準</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>外食清潔費</td>
+                            <td class="text-center">$10/人，以桌計價（飲料不計費）</td>
+                        </tr>
+                        <tr>
+                            <td>超時費</td>
+                            <td class="text-center">非營業時間預約，$70/人/hr</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 說明 -->
+        <div class="card bg-warning">
+            <div class="card-body">
+                <h6 class="mb-0">
+                    <strong>說明：</strong>以上優惠折扣不可與其他優惠搭配使用
+                </h6>
+            </div>
+        </div>
+    </div>
+</div>

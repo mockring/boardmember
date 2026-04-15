@@ -4,18 +4,20 @@
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>🏅 等級管理</h2>
-    <a asp-action="Create" class="btn btn-primary">新增等級</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🏅 等級管理</h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary">+ 新增等級</a>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    <div class="alert alert-success mb-4">@TempData["SuccessMessage"]</div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger mb-4">@TempData["ErrorMessage"]</div>
 }
 
 <div class="card">
@@ -67,17 +69,17 @@
                                 }
                             </td>
                             <td>
-                                <a asp-action="Edit" asp-route-id="@level.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                                <a asp-action="Edit" asp-route-id="@level.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                                 @if (!level.IsDefault)
                                 {
-                                    <a asp-action="SetDefault" asp-route-id="@level.Id" class="btn btn-sm btn-outline-success"
+                                    <a asp-action="SetDefault" asp-route-id="@level.Id" class="btn btn-sm btn-outline-secondary"
                                        onclick="return confirm('確定要將「@level.Name」設為預設等級嗎？')">
                                         設為預設
                                     </a>
                                 }
                                 @if (level.IsDeletable)
                                 {
-                                    <a asp-action="Delete" asp-route-id="@level.Id" class="btn btn-sm btn-outline-danger"
+                                    <a asp-action="Delete" asp-route-id="@level.Id" class="btn btn-sm btn-outline-secondary"
                                        onclick="return confirm('確定要刪除「@level.Name」嗎？')">刪除</a>
                                 }
                             </td>

@@ -20,8 +20,6 @@ public class Member
     [MaxLength(255)]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(255)]
     public string PasswordHash { get; set; } = string.Empty;
 
     public DateTime? Birthday { get; set; }
@@ -43,7 +41,6 @@ public class Member
     // Navigation
     public Level Level { get; set; } = null!;
     public ICollection<Order> Orders { get; set; } = new List<Order>();
-    public ICollection<PointTransaction> PointTransactions { get; set; } = new List<PointTransaction>();
     public ICollection<MemberCoupon> MemberCoupons { get; set; } = new List<MemberCoupon>();
     public ICollection<PlayRecord> PlayRecords { get; set; } = new List<PlayRecord>();
     public ICollection<GameRental> GameRentals { get; set; } = new List<GameRental>();

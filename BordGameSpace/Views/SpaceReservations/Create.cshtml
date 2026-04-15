@@ -1,0 +1,97 @@
+@{
+    ViewData["Title"] = "申請訂位預約";
+    Layout = "_Layout";
+    var member = ViewBag.Member as BordGameSpace.Models.Member;
+}
+
+<h2 class="mb-4">📅 申請訂位預約</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="card mb-4">
+        <div class="card-header">預約人資料</div>
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <label class="form-label">姓名</label>
+                    <input type="text" class="form-control" value="@member?.Name" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">電話</label>
+                    <input type="text" class="form-control" value="@member?.Phone" readonly />
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <label class="form-label">會員等級</label>
+                    <input type="text" class="form-control" value="@member?.Level?.Name" readonly />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">預約時段</div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">預約日期 <span class="text-danger">*</span></label>
+                    <input type="date" name="reservationDate" class="form-control" required
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">人數 <span class="text-danger">*</span></label>
+                    <input type="number" name="peopleCount" class="form-control" value="2" min="1" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">空間 <span class="text-danger">*</span></label>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="spaceTypeBox" name="isPrivateRoom" value="true" onchange="togglePrivateRoom()" />
+                        <label class="form-check-label" for="spaceTypeBox">包廂</label>
+                        <span class="text-muted small">(須加包廂費)</span>
+                    </div>
+                    <input type="hidden" name="spaceType" id="spaceType" value="訂位" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">開始時間 <span class="text-danger">*</span></label>
+                    <input type="time" name="startTime" class="form-control" required value="09:00" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">結束時間 <span class="text-danger">*</span></label>
+                    <input type="time" name="endTime" class="form-control" required value="17:00" />
+                </div>
+            </div>
+            <div class="alert alert-info">
+                📌 費用說明：本場所不收取預約費用，僅供場地預訂使用。費用詳見價位表。
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">備註（選填）</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="例如：需要插座、感謝"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">送出申請</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">返回列表</a>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+function togglePrivateRoom() {
+    var checked = document.getElementById('spaceTypeBox').checked;
+    document.getElementById('spaceType').value = checked ? '包廂' : '訂位';
+}
+</script>
+}

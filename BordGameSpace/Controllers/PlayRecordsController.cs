@@ -36,11 +36,19 @@ public class PlayRecordsController : BaseController
 
         ViewBag.ActivePlays = activePlays;
         ViewBag.HasUnpaid = activePlays.Any(p => p.Status == "Completed");
+        ViewBag.TaiwanNow = TaiwanNow;
+        ViewBag.DefaultStartTime = TaiwanNow.ToString("yyyy-MM-ddTHH:mm");
+
+        // 會員等級費率（用於計費說明）
+        var levels = await _db.Levels
+            .OrderBy(l => l.SortOrder)
+            .ToListAsync();
+        ViewBag.Levels = levels;
 
         // 計算各記錄的已玩時數和費用
         foreach (var play in activePlays)
         {
-            var elapsed = (play.EndTime ?? DateTime.Now) - play.StartTime;
+            var elapsed = (play.EndTime ?? TaiwanNow) - play.StartTime;
             var hours = (decimal)Math.Ceiling(elapsed.TotalHours); // 無條件進位
             play.TotalHours = hours;
             play.Amount = hours * play.HourlyRate;
@@ -65,6 +73,9 @@ public class PlayRecordsController : BaseController
         if (member == null)
             return Json(new { success = true, isMember = false });
 
+        var weekdayRate = member.Level?.WeekdayHourlyRate ?? 60;
+        var holidayRate = member.Level?.HolidayHourlyRate ?? 70;
+
         return Json(new
         {
             success = true,
@@ -75,8 +86,8 @@ public class PlayRecordsController : BaseController
                 member.Name,
                 member.Phone,
                 LevelName = member.Level?.Name,
-                member.Level.WeekdayHourlyRate,
-                member.Level.HolidayHourlyRate
+                weekdayHourlyRate = weekdayRate,
+                holidayHourlyRate = holidayRate
             }
         });
     }
@@ -90,8 +101,11 @@ public class PlayRecordsController : BaseController
         if (!IsAdminLoggedIn)
             return Json(new { success = false, message = "未登入" });
 
+        // 將 client 送來的 UTC 時間轉為台灣時區
+        var startTime = TimeZoneInfo.ConvertTimeFromUtc(request.StartTime.ToUniversalTime(), TaiwanZone);
+
         Member? member = null;
-        decimal hourlyRate = GetNonMemberRate(request.StartTime);
+        decimal hourlyRate = GetNonMemberRate(startTime);
 
         if (request.MemberId.HasValue)
         {
@@ -101,7 +115,7 @@ public class PlayRecordsController : BaseController
 
             if (member?.Level != null)
             {
-                hourlyRate = IsHoliday(request.StartTime)
+                hourlyRate = IsHoliday(startTime)
                     ? member.Level.HolidayHourlyRate
                     : member.Level.WeekdayHourlyRate;
             }
@@ -112,10 +126,10 @@ public class PlayRecordsController : BaseController
             MemberId = member?.Id,
             MemberName = member?.Name ?? request.MemberName ?? "非會員",
             MemberPhone = member?.Phone ?? request.Phone,
-            StartTime = request.StartTime,
+            StartTime = startTime,
             HourlyRate = hourlyRate,
             Status = "Playing",
-            CreatedAt = DateTime.Now
+            CreatedAt = TaiwanNow
         };
 
         _db.PlayRecords.Add(play);
@@ -157,7 +171,7 @@ public class PlayRecordsController : BaseController
             return RedirectToAction("Index");
 
         // 計算時數與金額
-        var endTime = DateTime.Now;
+        var endTime = TaiwanNow;
         play.EndTime = endTime;
 
         var elapsed = endTime - play.StartTime;
@@ -176,13 +190,17 @@ public class PlayRecordsController : BaseController
             play.HourlyRate = GetNonMemberRate(play.StartTime);
         }
 
-        play.Amount = hours * play.HourlyRate;
+        // 套用每日上限
+        var dailyCap = play.Member != null
+            ? (IsHoliday(play.StartTime) ? 220m : 180m)
+            : (IsHoliday(play.StartTime) ? 280m : 240m);
+        play.Amount = Math.Min(hours * play.HourlyRate, dailyCap);
         play.Status = "Completed";
 
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("結束遊玩: PlayId={PlayId}, Hours={Hours}, Amount={Amount}",
-            play.Id, play.TotalHours, play.Amount);
+        _logger.LogInformation("結束遊玩: PlayId={PlayId}, Hours={Hours}, Amount={Amount}, Cap={DailyCap}",
+            play.Id, play.TotalHours, play.Amount, dailyCap);
 
         return RedirectToAction("Index");
     }
@@ -214,7 +232,7 @@ public class PlayRecordsController : BaseController
     /// </summary>
     private decimal GetNonMemberRate(DateTime date)
     {
-        return IsHoliday(date) ? 75 : 65;
+        return IsHoliday(date) ? 70 : 60;
     }
 
     /// <summary>

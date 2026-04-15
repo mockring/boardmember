@@ -34,7 +34,13 @@ public class PlayRecord
     [MaxLength(50)]
     public string Status { get; set; } = "Playing"; // Playing/Completed/CheckedOut
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; }
+
+    public PlayRecord()
+    {
+        CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneHelper.TaiwanZone);
+    }
 
     // Navigation
     public Member? Member { get; set; }

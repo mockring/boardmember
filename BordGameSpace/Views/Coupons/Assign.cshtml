@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "發放優惠券";
     Layout = "_AdminLayout";
+    var levels = ViewBag.Levels as List<BordGameSpace.Models.Level>;
 }
 
 <h2>🎫 發放優惠券 — @Model.Name</h2>
@@ -22,10 +23,10 @@
             </div>
             <div class="col-md-3">
                 <strong>有效期限：</strong>
-                @Model.ValidFrom:yyyy-MM ~ @Model.ValidUntil:yyyy-MM
+                @Model.ValidFrom.ToString("yyyy/MM/dd") ~ @(Model.ValidUntil?.ToString("yyyy/MM/dd") ?? "不限")
             </div>
             <div class="col-md-3">
-                <strong>發行數量：</strong> @Model.TotalQuantity
+                <strong>發行數量：</strong> @(Model.TotalQuantity?.ToString() ?? "不限")
             </div>
         </div>
     </div>
@@ -56,50 +57,34 @@
     </div>
 </div>
 
-<!-- 大量發放 -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                發放給所有會員
-            </div>
-            <div class="card-body">
-                <p>一鍵發放給所有已啟用的會員（每人一張）</p>
-                <form asp-action="AssignToAll" method="post">
-                    <input type="hidden" name="couponId" value="@Model.Id" />
-                    <button type="submit" class="btn btn-success"
-                            onclick="return confirm('確定要發放給所有會員嗎？')">
-                        🚀 發放給所有會員
-                    </button>
-                </form>
-            </div>
+<!-- 依等級發放 -->
+@if (levels != null && levels.Count > 0)
+{
+    <div class="card">
+        <div class="card-header bg-warning text-dark">
+            依等級發放
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                依等級發放
-            </div>
-            <div class="card-body">
-                <form asp-action="AssignByLevel" method="post">
-                    <input type="hidden" name="couponId" value="@Model.Id" />
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <select name="levelId" class="form-select" required>
-                                <option value="">— 選擇等級 —</option>
-                                <option value="1">金鑽鳳梨</option>
-                                <option value="2">小鳳梨</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <button type="submit" class="btn btn-warning">發放</button>
-                        </div>
+        <div class="card-body">
+            <form asp-action="AssignByLevel" method="post">
+                <input type="hidden" name="couponId" value="@Model.Id" />
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <select name="levelId" class="form-select" required>
+                            <option value="">— 選擇等級 —</option>
+                            @foreach (var lvl in levels)
+                            {
+                                <option value="@lvl.Id">@lvl.Name</option>
+                            }
+                        </select>
                     </div>
-                </form>
-            </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-warning">發放</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-</div>
+}
 
 <div class="mt-3">
     <a asp-action="Index" class="btn btn-secondary">返回列表</a>
@@ -107,7 +92,6 @@
 
 @section Scripts {
     <script>
-        // 簡單電話搜尋
         document.querySelector('input[name="phone"]').addEventListener('change', async function () {
             const phone = this.value.trim();
             if (!phone) return;

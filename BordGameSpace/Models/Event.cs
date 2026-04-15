@@ -15,12 +15,22 @@ public class Event
     [Required]
     public string Content { get; set; } = string.Empty;
 
-    public DateTime? EventDate { get; set; }
+    public DateTime EventDate { get; set; }
+
+    public DateTime RegistrationDeadline { get; set; }
 
     [MaxLength(50)]
-    public string Status { get; set; } = "RegistrationOpen"; // RegistrationOpen/Closed/Ended
+    public string Status { get; set; } = "RegistrationOpen"; // RegistrationOpen/RegistrationClosed/Ended
+
+    public int? MaxParticipants { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+    [MaxLength(500)]
+    public string? ImageUrl { get; set; }
+
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+    // Navigation
+    public ICollection<EventRegistration> Registrations { get; set; } = new List<EventRegistration>();
 }

@@ -28,6 +28,18 @@ public class OrderItem
     [Column(TypeName = "decimal(10,0)")]
     public decimal Subtotal { get; set; } = 0;
 
+    // 折扣欄位（None/Percentage/FixedAmount）
+    [MaxLength(50)]
+    public string DiscountType { get; set; } = "None"; // None/Percentage/FixedAmount
+
+    [Column(TypeName = "decimal(10,0)")]
+    public decimal DiscountValue { get; set; } = 0;
+
+
+    // CouponId：用於追蹤此項目適用的優惠券（對應 MemberCoupon）
+    public int? CouponId { get; set; }
+
     // Navigation
     public Order Order { get; set; } = null!;
+    public Coupon? Coupon { get; set; }
 }

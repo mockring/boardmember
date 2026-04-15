@@ -16,14 +16,13 @@ public class AppDbContext : DbContext
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<MemberCoupon> MemberCoupons { get; set; }
-    public DbSet<PointTransaction> PointTransactions { get; set; }
     public DbSet<PlayRecord> PlayRecords { get; set; }
     public DbSet<GameRental> GameRentals { get; set; }
     public DbSet<SpaceReservation> SpaceReservations { get; set; }
     public DbSet<Event> Events { get; set; }
+    public DbSet<EventRegistration> EventRegistrations { get; set; }
     public DbSet<RestockRecord> RestockRecords { get; set; }
     public DbSet<Admin> Admins { get; set; }
-    public DbSet<PointSetting> PointSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -85,20 +84,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(mc => mc.CouponId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // PointTransaction - Member relationship
-        modelBuilder.Entity<PointTransaction>()
-            .HasOne(pt => pt.Member)
-            .WithMany(m => m.PointTransactions)
-            .HasForeignKey(pt => pt.MemberId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // PointTransaction - Order relationship (optional)
-        modelBuilder.Entity<PointTransaction>()
-            .HasOne(pt => pt.Order)
-            .WithMany(o => o.PointTransactions)
-            .HasForeignKey(pt => pt.OrderId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         // PlayRecord - Member relationship (optional)
         modelBuilder.Entity<PlayRecord>()
             .HasOne(pr => pr.Member)
@@ -139,7 +124,7 @@ public class AppDbContext : DbContext
             .HasOne(sr => sr.Member)
             .WithMany(m => m.SpaceReservations)
             .HasForeignKey(sr => sr.MemberId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
 
         // SpaceReservation - Order relationship (optional)
         modelBuilder.Entity<SpaceReservation>()
@@ -147,6 +132,13 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(sr => sr.OrderId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // EventRegistration - Event relationship
+        modelBuilder.Entity<EventRegistration>()
+            .HasOne(er => er.Event)
+            .WithMany(e => e.Registrations)
+            .HasForeignKey(er => er.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // RestockRecord - Product relationship
         modelBuilder.Entity<RestockRecord>()
@@ -201,20 +193,58 @@ public class AppDbContext : DbContext
             }
         );
 
-        // Seed Data - Default PointSettings
-        modelBuilder.Entity<PointSetting>().HasData(
-            new PointSetting
+        // Seed Data - Coupons
+        modelBuilder.Entity<Coupon>().HasData(
+            new Coupon
             {
                 Id = 1,
-                EarnRate = 1m,
-                RedeemRate = 1m,
-                MinRedeemPoints = 100,
-                ApplicableLevelId = 0,
-                IsEnabled = false,
-                Description = "預設積分規則：消費 1 元獲得 1 積分，1 積分折抵 1 元",
-                CreatedAt = new DateTime(2024, 1, 1),
-                UpdatedAt = new DateTime(2024, 1, 1)
+                Name = "會員:購買桌遊9折",
+                CouponType = "Percentage",
+                DiscountValue = 10,
+                MinPurchase = 0,
+                ApplicableTo = "Product",
+                TotalQuantity = null,
+                UsedCount = 0,
+                ValidFrom = new DateTime(2026, 1, 1),
+                ValidUntil = null,
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1)
+            },
+            new Coupon
+            {
+                Id = 2,
+                Name = "生日禮:生日當月3人同行壽星免場地費",
+                CouponType = "Percentage",
+                DiscountValue = 100,
+                MinPurchase = 0,
+                ApplicableTo = "Play",
+                TotalQuantity = null,
+                UsedCount = 0,
+                ValidFrom = new DateTime(2026, 1, 1),
+                ValidUntil = null,
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1)
             }
         );
+
+        // Seed Data - Products
+        modelBuilder.Entity<Product>().HasData(
+            new Product
+            {
+                Id = 7,
+                Category = "服務",
+                Name = "會員申請",
+                Description = null,
+                Price = 200,
+                Stock = null,
+                LowStockAlert = 0,
+                ImageUrl = null,
+                IsActive = true,
+                IsService = true,
+                CreatedAt = new DateTime(2026, 1, 1),
+                UpdatedAt = new DateTime(2026, 1, 1)
+            }
+        );
+
     }
 }

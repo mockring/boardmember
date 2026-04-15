@@ -16,99 +16,23 @@
             <i class="bi bi-cart-fill"></i> 🚀 快速消費 POS
         </a>
     </div>
-    <div class="col-md-6">
-        <a asp-controller="PlayRecords" asp-action="Index" class="btn btn-success btn-lg w-100 py-3">
-            <i class="bi bi-controller"></i> 🎮 現場遊玩紀錄
-        </a>
-    </div>
 </div>
 
-<!-- 今日概覽卡片 -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="text-primary">@ViewBag.TodayOrderCount</h3>
-                <p>今日訂單數</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="text-success">@ViewBag.TodayRevenue.ToString("N0")</h3>
-                <p>今日營收</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="text-warning">@ViewBag.ActivePlayCount</h3>
-                <p>遊玩中</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="text-danger">@ViewBag.LowStockCount</h3>
-                <p>低庫存警示</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- 低庫存警示 -->
-@if (ViewBag.LowStockCount > 0)
-{
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                    ⚠️ 低庫存警示 (@ViewBag.LowStockCount 項商品)
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>商品名稱</th>
-                                <th>類別</th>
-                                <th>當前庫存</th>
-                                <th>警示值</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in ViewBag.LowStockProducts)
-                            {
-                                <tr>
-                                    <td>@p.Name</td>
-                                    <td>@p.Category</td>
-                                    <td class="text-danger">@(p.Stock?.ToString() ?? "-")</td>
-                                    <td>@p.LowStockAlert</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+<!-- 進行中的遊玩明細 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <a asp-controller="PlayRecords" asp-action="AdminIndex" class="text-decoration-none text-white">🎮 進行中的遊玩 (@(ViewBag.ActivePlayCount ?? 0) 人)</a>
             </div>
-        </div>
-    </div>
-}
-
-<!-- 進行中的遊玩名單 -->
-@if (ViewBag.ActivePlays != null && ((List<BordGameSpace.Models.PlayRecord>)ViewBag.ActivePlays).Any())
-{
-    var activePlays = (List<BordGameSpace.Models.PlayRecord>)ViewBag.ActivePlays;
-    var hasUnpaid = activePlays.Any(p => p.Status == "Completed");
-    
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card @(hasUnpaid ? "border-danger" : "border-info")">
-                <div class="card-header @(hasUnpaid ? "bg-danger text-white" : "bg-info text-white")">
-                    @(hasUnpaid ? "⚠️ 待結帳顧客" : "🎮 進行中的遊玩") (@activePlays.Count 人)
-                </div>
-                <div class="card-body">
+            <div class="card-body">
+                @{
+                    var plays = ViewBag.ActivePlays as List<BordGameSpace.Models.PlayRecord>;
+                    var hasUnpaid = plays?.Any(p => p.Status == "Completed") ?? false;
+                }
+                @if (plays != null && plays.Any())
+                {
                     <table class="table table-sm">
                         <thead>
                             <tr>
@@ -121,7 +45,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var play in activePlays)
+                            @foreach (var play in plays)
                             {
                                 <tr class="@(play.Status == "Completed" ? "table-warning" : "")">
                                     <td>@play.MemberName</td>
@@ -129,7 +53,8 @@
                                     <td>@play.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
                                     <td>
                                         @{
-                                            var elapsed = DateTime.Now - play.StartTime;
+                                            var endTime = play.EndTime ?? (DateTime)ViewBag.TaiwanNow;
+                                            var elapsed = endTime - play.StartTime;
                                             var hours = Math.Floor(elapsed.TotalHours);
                                             var mins = elapsed.Minutes;
                                             <text>@hours 小時 @mins 分</text>
@@ -159,44 +84,195 @@
                             }
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- 功能快捷入口 -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3><a asp-controller="Levels" asp-action="Index">🏅</a></h3>
-                <p>等級管理</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3><a asp-controller="Products" asp-action="Index">📦</a></h3>
-                <p>商品管理</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3><a asp-controller="Members" asp-action="Index">👥</a></h3>
-                <p>會員管理</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3><a asp-controller="Orders" asp-action="Index">🧾</a></h3>
-                <p>訂單管理</p>
+                }
+                else
+                {
+                    <p class="text-center text-muted mb-0">目前沒有進行中的遊玩</p>
+                }
             </div>
         </div>
     </div>
 </div>
+
+<!-- 進行中的遊戲租借明細 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <a asp-controller="GameRentals" asp-action="AdminIndex" class="text-decoration-none text-dark">🎲 遊戲租借 (@(ViewBag.ActiveRentalCount ?? 0) 筆)</a>
+            </div>
+            <div class="card-body">
+                @{
+                    var rentals = ViewBag.ActiveRentals as List<BordGameSpace.Models.GameRental>;
+                }
+                @if (rentals != null && rentals.Any())
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>租借日期</th>
+                                <th>遊戲名稱</th>
+                                <th>租借人</th>
+                                <th>電話</th>
+                                <th>取件日期</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rental in rentals)
+                            {
+                                <tr>
+                                    <td>@rental.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                    <td>@rental.Product?.Name</td>
+                                    <td>@(rental.Member?.Name ?? rental.RenterName)</td>
+                                    <td>@(rental.Member?.Phone ?? rental.RenterPhone)</td>
+                                    <td>@(rental.PickupDate?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                                    <td>
+                                        @if (rental.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">審核中</span>
+                                        }
+                                        else if (rental.Status == "Approved")
+                                        {
+                                            <span class="badge bg-primary">已通過</span>
+                                        }
+                                        else if (rental.Status == "Borrowed")
+                                        {
+                                            <span class="badge bg-info">已借出</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (rental.Status == "Pending")
+                                        {
+                                            <a asp-controller="GameRentals" asp-action="Approve" asp-route-id="@rental.Id" class="btn btn-sm btn-success" onclick="return confirm('確定通過申請？')">通過</a>
+                                            <a asp-controller="GameRentals" asp-action="Reject" asp-route-id="@rental.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定取消申請？')">取消</a>
+                                        }
+                                        else if (rental.Status == "Approved")
+                                        {
+                                            <a asp-controller="GameRentals" asp-action="Borrow" asp-route-id="@rental.Id" class="btn btn-sm btn-primary" onclick="return confirm('確定已取貨借出？')">借出</a>
+                                        }
+                                        else if (rental.Status == "Borrowed")
+                                        {
+                                            <a asp-controller="GameRentals" asp-action="Return" asp-route-id="@rental.Id" class="btn btn-sm btn-outline-success" onclick="return confirm('確定已完成歸還？')">歸還</a>
+                                            @if (rental.OrderId == null)
+                                            {
+                                                <a asp-controller="GameRentals" asp-action="CreateOrder" asp-route-id="@rental.Id" class="btn btn-sm btn-primary">建立訂單</a>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info">已開單</span>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-center text-muted mb-0">目前沒有進行中的遊戲租借</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 訂位預約明細 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <a asp-controller="SpaceReservations" asp-action="AdminIndex" class="text-decoration-none text-white">📅 訂位預約 (@(ViewBag.UpcomingReservationCount ?? 0) 筆)</a>
+            </div>
+            <div class="card-body">
+                @{
+                    var reservations = ViewBag.UpcomingReservations as List<BordGameSpace.Models.SpaceReservation>;
+                }
+                @if (reservations != null && reservations.Any())
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>預約日期</th>
+                                <th>姓名</th>
+                                <th>電話</th>
+                                <th>時段</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in reservations)
+                            {
+                                <tr>
+                                    <td>@r.ReservationDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@r.Name</td>
+                                    <td>@r.Phone</td>
+                                    <td>@r.StartTime - @r.EndTime</td>
+                                    <td>
+                                        @if (r.Status == "Approved")
+                                        {
+                                            <span class="badge bg-success">已通過</span>
+                                        }
+                                        else if (r.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">審核中</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-center text-muted mb-0">目前沒有已預訂的訂位預約</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 報名中的活動 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <a asp-controller="Events" asp-action="Index" class="text-decoration-none text-white">📋 報名中的活動 (@(ViewBag.OpenEventCount ?? 0) 筆)</a>
+            </div>
+            <div class="card-body">
+                @{
+                    var openEvents = ViewBag.OpenEvents as List<BordGameSpace.Models.Event>;
+                }
+                @if (openEvents != null && openEvents.Any())
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>活動名稱</th>
+                                <th>日期</th>
+                                <th>報名狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var evt in openEvents)
+                            {
+                                <tr>
+                                    <td><a asp-controller="Events" asp-action="Details" asp-route-id="@evt.Id">@evt.Title</a></td>
+                                    <td>@evt.EventDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@evt.Registrations.Count@(evt.MaxParticipants.HasValue ? "/" + evt.MaxParticipants.Value : "") 人</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-center text-muted mb-0">目前沒有報名中的活動</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

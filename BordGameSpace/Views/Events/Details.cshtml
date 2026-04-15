@@ -1,0 +1,81 @@
+@model BordGameSpace.Models.Event
+@{
+    ViewData["Title"] = "活動詳情";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>📋 @Model.Title</h3>
+    <a asp-action="Index" class="btn btn-outline-secondary">返回列表</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-md-2">活動日期</dt>
+            <dd class="col-md-4">@Model.EventDate.ToString("yyyy/MM/dd HH:mm")</dd>
+            <dt class="col-md-2">報名截止</dt>
+            <dd class="col-md-4">@Model.RegistrationDeadline.ToString("yyyy/MM/dd HH:mm")</dd>
+            <dt class="col-md-2">人數上限</dt>
+            <dd class="col-md-4">@(Model.MaxParticipants?.ToString() ?? "無上限")</dd>
+            <dt class="col-md-2">目前報名</dt>
+            <dd class="col-md-4">@(Model.Registrations?.Count ?? 0)</dd>
+            <dt class="col-md-2">狀態</dt>
+            <dd class="col-md-4">
+                @switch (Model.Status)
+                {
+                    case "RegistrationOpen":<span class="badge bg-success">報名中</span>; break;
+                    case "RegistrationClosed":<span class="badge bg-warning text-dark">報名截止</span>; break;
+                    case "Ended":<span class="badge bg-secondary">已結束</span>; break;
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ImageUrl))
+{
+    <div class="card mb-4">
+        <div class="card-header">活動圖片</div>
+        <div class="card-body text-center">
+            <img src="@Model.ImageUrl" style="max-width:600px;max-height:400px;" class="img-fluid" />
+        </div>
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-header">活動內容</div>
+    <div class="card-body">@Model.Content</div>
+</div>
+
+<div class="card">
+    <div class="card-header">報名人列表</div>
+    <div class="card-body">
+        <table class="table table-striped table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>電話</th>
+                    <th>報名時間</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Registrations != null && Model.Registrations.Any())
+                {
+                    foreach (var r in Model.Registrations)
+                    {
+                        <tr>
+                            <td>@r.Name</td>
+                            <td>@r.Phone</td>
+                            <td>@r.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" class="text-center text-muted">尚無報名人</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

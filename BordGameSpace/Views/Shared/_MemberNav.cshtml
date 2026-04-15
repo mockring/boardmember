@@ -1,0 +1,28 @@
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+
+<div class="list-group">
+    <a asp-controller="Member" asp-action="Profile" class="list-group-item list-group-item-action @(currentAction == "Profile" ? "active" : "")">
+        👤 我的資料
+    </a>
+    <a asp-controller="Member" asp-action="Orders" class="list-group-item list-group-item-action @(currentAction == "Orders" ? "active" : "")">
+        📋 我的訂單
+    </a>
+    <a asp-controller="SpaceReservations" asp-action="Index" class="list-group-item list-group-item-action @(currentController == "SpaceReservations" ? "active" : "")">
+        📅 訂位預約
+    </a>
+    <a asp-controller="Events" asp-action="MyRegistrations" class="list-group-item list-group-item-action @(currentController == "Events" && currentAction == "MyRegistrations" ? "active" : "")">
+        🎪 活動報名
+    </a>
+    <a asp-controller="GameRentals" asp-action="Index" class="list-group-item list-group-item-action @(currentController == "GameRentals" ? "active" : "")">
+        🎲 遊戲租借
+    </a>
+    <a asp-controller="Member" asp-action="Coupons" class="list-group-item list-group-item-action @(currentAction == "Coupons" ? "active" : "")">
+        🎟️ 我的優惠券
+    </a>
+    <a asp-controller="Member" asp-action="ChangePassword" class="list-group-item list-group-item-action @(currentAction == "ChangePassword" ? "active" : "")">
+        🔑 修改密碼
+    </a>
+</div>

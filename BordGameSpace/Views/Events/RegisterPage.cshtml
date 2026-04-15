@@ -1,0 +1,61 @@
+@model BordGameSpace.Models.Event
+@{
+    ViewData["Title"] = "報名活動";
+    Layout = "_Layout";
+
+    var registrationCount = Model.Registrations?.Count ?? 0;
+    var isFull = Model.MaxParticipants.HasValue && registrationCount >= Model.MaxParticipants.Value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🎪 @Model.Title</h3>
+    <a asp-action="FrontendDetails" asp-route-id="@Model.Id" class="btn btn-outline-secondary">返回活動詳情</a>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-md-2">活動日期</dt>
+            <dd class="col-md-4">@Model.EventDate.ToString("yyyy/MM/dd HH:mm")</dd>
+            <dt class="col-md-2">報名人數</dt>
+            <dd class="col-md-4">
+                @(Model.MaxParticipants.HasValue ? $"{registrationCount} / {Model.MaxParticipants}" : $"{registrationCount}（無上限）")
+            </dd>
+        </dl>
+    </div>
+</div>
+
+@if (!isFull)
+{
+    <div class="card">
+        <div class="card-header">填寫報名資料</div>
+        <div class="card-body">
+            <form asp-action="RegisterPagePost" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="eventId" value="@Model.Id" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">姓名</label>
+                        <input type="text" name="name" class="form-control" value="@ViewBag.MemberName" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">電話</label>
+                        <input type="tel" name="phone" class="form-control" value="@ViewBag.MemberPhone" readonly />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">確認報名</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">抱歉，報名人數已額滿</div>
+}

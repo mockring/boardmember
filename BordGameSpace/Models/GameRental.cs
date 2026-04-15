@@ -8,11 +8,13 @@ public class GameRental
     [Key]
     public int Id { get; set; }
 
-    public int MemberId { get; set; }
+    public int? MemberId { get; set; }
 
     public int ProductId { get; set; }
 
     public DateTime BorrowDate { get; set; }
+
+    public DateTime? PickupDate { get; set; }
 
     public DateTime DueDate { get; set; }
 
@@ -29,10 +31,16 @@ public class GameRental
 
     public int? OrderId { get; set; }
 
+    [MaxLength(50)]
+    public string RenterName { get; set; } = "";
+
+    [MaxLength(20)]
+    public string RenterPhone { get; set; } = "";
+
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     // Navigation
-    public Member Member { get; set; } = null!;
+    public Member? Member { get; set; } = null!;
     public Product Product { get; set; } = null!;
     public Order? Order { get; set; }
 }

@@ -176,31 +176,4 @@ public class MemberController : BaseController
         return View(memberCoupons);
     }
 
-    /// <summary>
-    /// 我的積分
-    /// </summary>
-    public async Task<IActionResult> Points()
-    {
-        if (!CurrentMemberId.HasValue)
-            return RedirectToAction("Login", "Account");
-
-        var db = HttpContext.RequestServices.GetService<AppDbContext>();
-        var memberId = CurrentMemberId.Value;
-
-        var lastTx = await db!.PointTransactions
-            .Where(pt => pt.MemberId == memberId)
-            .OrderByDescending(pt => pt.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        var balance = lastTx?.Balance ?? 0;
-
-        var transactions = await db.PointTransactions
-            .Where(pt => pt.MemberId == memberId)
-            .OrderByDescending(pt => pt.CreatedAt)
-            .Take(50)
-            .ToListAsync();
-
-        ViewBag.Balance = balance;
-        return View(transactions);
-    }
 }

@@ -51,13 +51,17 @@
                            value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">截止日期 *</label>
-                    <input asp-for="ValidUntil" class="form-control" type="date"
-                           value="@DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd")" />
+                    <label class="form-label">截止日期</label>
+                    <input asp-for="ValidUntil" class="form-control" type="date" />
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" id="noExpiryCheck" />
+                        <label class="form-check-label" for="noExpiryCheck">不限時間</label>
+                    </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">發行數量 *</label>
-                    <input asp-for="TotalQuantity" class="form-control" type="number" min="1" value="100" />
+                    <label class="form-label">發行數量</label>
+                    <input asp-for="TotalQuantity" class="form-control" type="number" min="0" placeholder="留空代表不限張數" />
+                    <small class="text-muted">留空 = 不限張數，0 = 已用完</small>
                 </div>
             </div>
 
@@ -68,3 +72,12 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    document.getElementById('noExpiryCheck').addEventListener('change', function() {
+        document.getElementById('ValidUntil').disabled = this.checked;
+        if (this.checked) document.getElementById('ValidUntil').value = '';
+    });
+</script>
+}

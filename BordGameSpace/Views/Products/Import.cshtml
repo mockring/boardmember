@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "匯入商品";
+    Layout = "_AdminLayout";
+}
+
+<h2>📥 匯入商品</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">📋 Excel 範本格式</h5>
+    </div>
+    <div class="card-body">
+        <p>請依照以下格式填寫 Excel 檔案：</p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm" style="max-width: 700px;">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>LowStockAlert</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>璀璨寶藏</td>
+                        <td>桌遊</td>
+                        <td>300</td>
+                        <td>5</td>
+                        <td>2</td>
+                        <td>經典桌遊</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <ul class="text-muted small mt-2">
+            <li><strong>Name</strong> (必填)：商品名稱</li>
+            <li><strong>Category</strong> (必填)：商品類別</li>
+            <li><strong>Price</strong> (必填)：售價</li>
+            <li><strong>Stock</strong>：庫存數量</li>
+            <li><strong>LowStockAlert</strong>：低庫存警示值</li>
+            <li><strong>Description</strong>：商品描述</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">📤 上傳 Excel 檔案</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" asp-action="Import">
+            <div class="mb-3">
+                <input type="file" name="file" class="form-control" accept=".xlsx" required />
+            </div>
+            <button type="submit" class="btn btn-primary">匯入</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">返回</a>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessCount"] != null || TempData["FailureCount"] != null)
+{
+    var successCount = Convert.ToInt32(TempData["SuccessCount"]);
+    var failureCount = Convert.ToInt32(TempData["FailureCount"]);
+
+    <div class="alert alert-success mt-3">
+        ✅ 成功匯入 @successCount 筆資料
+    </div>
+
+    @if (failureCount > 0)
+    {
+        <div class="alert alert-danger mt-3">
+            ❌ 失敗 @failureCount 筆資料
+            @if (TempData["FailureDetails"] != null)
+            {
+                <ul class="mb-0">
+                    @foreach (var detail in TempData["FailureDetails"]?.ToString()?.Split('\n') ?? Array.Empty<string>())
+                    {
+                        @if (!string.IsNullOrWhiteSpace(detail))
+                        {
+                            <li>@detail</li>
+                        }
+                    }
+                </ul>
+            }
+        </div>
+    }
+}

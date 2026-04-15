@@ -4,13 +4,16 @@
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>👥 會員管理</h2>
-    <a asp-action="Create" class="btn btn-primary">新增會員</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>👥 會員管理</h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Import" class="btn btn-outline-secondary">匯入</a>
+        <a asp-action="Create" class="btn btn-primary">+ 新增會員</a>
+    </div>
 </div>
 
 <!-- 搜尋與篩選 -->
-<div class="card mb-3">
+<div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row g-2">
             <div class="col-md-4">
@@ -34,7 +37,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-primary w-100">篩選</button>
+                <button type="submit" class="btn btn-primary w-100">篩選</button>
             </div>
         </form>
     </div>
@@ -97,16 +100,16 @@
                             </td>
                             <td>@m.CreatedAt.ToString("yyyy-MM-dd")</td>
                             <td>
-                                <a asp-action="Details" asp-route-id="@m.Id" class="btn btn-sm btn-outline-primary">詳情</a>
+                                <a asp-action="Details" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary">詳情</a>
                                 <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
                                 @if (m.Status)
                                 {
-                                    <a asp-action="ToggleStatus" asp-route-id="@m.Id" class="btn btn-sm btn-outline-warning"
+                                    <a asp-action="ToggleStatus" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary"
                                        onclick="return confirm('確定要停用「@m.Name」嗎？')">停用</a>
                                 }
                                 else
                                 {
-                                    <a asp-action="ToggleStatus" asp-route-id="@m.Id" class="btn btn-sm btn-outline-success">啟用</a>
+                                    <a asp-action="ToggleStatus" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary">啟用</a>
                                 }
                             </td>
                         </tr>

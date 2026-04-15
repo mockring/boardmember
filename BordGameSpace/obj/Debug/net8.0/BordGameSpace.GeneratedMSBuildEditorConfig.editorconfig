@@ -54,6 +54,62 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ291cG9ucy9Vc2FnZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL0RldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL0VkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/FrontendDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL0Zyb250ZW5kRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/FrontendIndex.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL0Zyb250ZW5kSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/MyRegistrations.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL015UmVnaXN0cmF0aW9ucy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Events/RegisterPage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXZlbnRzL1JlZ2lzdGVyUGFnZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/GameRentals/AdminCreate.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR2FtZVJlbnRhbHMvQWRtaW5DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/GameRentals/AdminIndex.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR2FtZVJlbnRhbHMvQWRtaW5JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/GameRentals/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR2FtZVJlbnRhbHMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/GameRentals/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR2FtZVJlbnRhbHMvRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/GameRentals/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR2FtZVJlbnRhbHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/GameRentals/MemberCreate.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvR2FtZVJlbnRhbHMvTWVtYmVyQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -94,10 +150,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWVtYmVyL09yZGVycy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Member/Points.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWVtYmVyL1BvaW50cy5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Member/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWVtYmVyL1Byb2ZpbGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -114,8 +166,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWVtYmVycy9FZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Members/Import.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWVtYmVycy9JbXBvcnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Members/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWVtYmVycy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Orders/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvT3JkZXJzL0RldGFpbHMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Orders/Index.cshtml]
@@ -126,16 +186,12 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGxheVJlY29yZHMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Points/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUG9pbnRzL0luZGV4LmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Points/Settings.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUG9pbnRzL1NldHRpbmdzLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Pos/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUG9zL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Pricing/Pricing.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUHJpY2luZy9QcmljaW5nLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Products/Create.cshtml]
@@ -146,8 +202,28 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUHJvZHVjdHMvRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Products/Import.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUHJvZHVjdHMvSW1wb3J0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Products/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUHJvZHVjdHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Reports/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVwb3J0cy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Restock/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVzdG9jay9DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Restock/Import.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVzdG9jay9JbXBvcnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Restock/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVzdG9jay9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Shared/Error.cshtml]
@@ -158,8 +234,32 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19BZG1pbkxheW91dC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Shared/_MemberNav.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19NZW1iZXJOYXYuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/SpaceReservations/AdminCreate.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU3BhY2VSZXNlcnZhdGlvbnMvQWRtaW5DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/SpaceReservations/AdminIndex.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU3BhY2VSZXNlcnZhdGlvbnMvQWRtaW5JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/SpaceReservations/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU3BhY2VSZXNlcnZhdGlvbnMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/SpaceReservations/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU3BhY2VSZXNlcnZhdGlvbnMvRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/SpaceReservations/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU3BhY2VSZXNlcnZhdGlvbnMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/Views/_ViewImports.cshtml]

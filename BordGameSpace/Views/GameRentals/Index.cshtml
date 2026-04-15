@@ -1,0 +1,97 @@
+@model IEnumerable<BordGameSpace.Models.GameRental>
+@{
+    ViewData["Title"] = "我的遊戲租借";
+    Layout = "_Layout";
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h4>@ViewBag.MemberName</h4>
+                <span class="badge bg-primary">@ViewBag.MemberLevel</span>
+            </div>
+        </div>
+        <partial name="_MemberNav" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>🎲 我的遊戲租借</h3>
+            <a asp-action="MemberCreate" class="btn btn-primary">+ 申請租借</a>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">尚無遊戲租借記錄</div>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>遊戲名稱</th>
+                        <th>借出日期</th>
+                        <th>應還日期</th>
+                        <th>歸還日期</th>
+                        <th>押金</th>
+                        <th>租金</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr class="@(r.Status == "Overdue" ? "table-danger" : (r.Status == "Pending" ? "table-warning" : ""))">
+                            <td>@r.Product?.Name</td>
+                            <td>@r.BorrowDate.ToString("yyyy-MM-dd")</td>
+                            <td>@r.DueDate.ToString("yyyy-MM-dd")</td>
+                            <td>@(r.ReturnDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                            <td>@(r.Deposit > 0 ? r.Deposit.ToString("N0") + " 元" : "免押金")</td>
+                            <td>@r.RentalFee.ToString("N0") 元</td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">審核中</span>
+                                }
+                                else if (r.Status == "Borrowed")
+                                {
+                                    <span class="badge bg-primary">已借出</span>
+                                }
+                                else if (r.Status == "Renewed")
+                                {
+                                    <span class="badge bg-info">已續借</span>
+                                }
+                                else if (r.Status == "Returned")
+                                {
+                                    <span class="badge bg-success">已歸還</span>
+                                }
+                                else if (r.Status == "Overdue")
+                                {
+                                    <span class="badge bg-danger">已逾期</span>
+                                }
+                                else if (r.Status == "Rejected")
+                                {
+                                    <span class="badge bg-secondary">已拒絕</span>
+                                }
+                            </td>
+                            <td>
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

@@ -188,7 +188,7 @@ public class AdminService
     /// <summary>
     /// 取得所有商品
     /// </summary>
-    public async Task<List<Product>> GetAllProductsAsync(string? category = null, bool? isActive = null)
+    public async Task<List<Product>> GetAllProductsAsync(string? category = null, bool? isActive = null, string? search = null)
     {
         var query = _db.Products.AsQueryable();
 
@@ -197,6 +197,9 @@ public class AdminService
 
         if (isActive.HasValue)
             query = query.Where(p => p.IsActive == isActive.Value);
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(p => p.Name.Contains(search));
 
         return await query.OrderBy(p => p.Category).ThenBy(p => p.Name).ToListAsync();
     }
@@ -207,6 +210,14 @@ public class AdminService
     public async Task<Product?> GetProductByIdAsync(int id)
     {
         return await _db.Products.FindAsync(id);
+    }
+
+    /// <summary>
+    /// 取得商品ByName
+    /// </summary>
+    public async Task<Product?> GetProductByNameAsync(string name)
+    {
+        return await _db.Products.FirstOrDefaultAsync(p => p.Name == name);
     }
 
     /// <summary>
@@ -357,6 +368,14 @@ public class AdminService
     }
 
     /// <summary>
+    /// 取得會員 By電話
+    /// </summary>
+    public async Task<Member?> GetMemberByPhoneAsync(string phone)
+    {
+        return await _db.Members.FirstOrDefaultAsync(m => m.Phone == phone);
+    }
+
+    /// <summary>
     /// 新增會員（後台用）
     /// </summary>
     public async Task<(bool Success, string Message)> CreateMemberAsync(Member model)
@@ -491,5 +510,66 @@ public class AdminService
         var action = member.Status ? "啟用" : "停用";
         _logger.LogInformation("會員 {Name} 已被{Action}", member.Name, action);
         return (true, $"會員「{member.Name}」已改為「{(member.Status ? "啟用" : "停用")}」");
+    }
+
+    // ========== 訂單管理 ==========
+
+    /// <summary>
+    /// 取得所有訂單（可依條件篩選）
+    /// </summary>
+    public async Task<List<Order>> GetAllOrdersAsync(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        string? memberSearch = null,
+        string? orderType = null,
+        string? paymentStatus = null)
+    {
+        var query = _db.Orders
+            .Include(o => o.Member)
+            .Include(o => o.OrderItems)
+            .AsQueryable();
+
+        if (startDate.HasValue)
+            query = query.Where(o => o.CreatedAt.Date >= startDate.Value.Date);
+
+        if (endDate.HasValue)
+            query = query.Where(o => o.CreatedAt.Date <= endDate.Value.Date);
+
+        if (!string.IsNullOrWhiteSpace(memberSearch))
+            query = query.Where(o =>
+                (o.MemberName != null && o.MemberName.Contains(memberSearch)) ||
+                (o.MemberPhone != null && o.MemberPhone.Contains(memberSearch)) ||
+                (o.Member != null && o.Member.Name != null && o.Member.Name.Contains(memberSearch)));
+
+        if (!string.IsNullOrWhiteSpace(orderType) && orderType != "All")
+            query = query.Where(o => o.OrderType == orderType);
+
+        if (!string.IsNullOrWhiteSpace(paymentStatus) && paymentStatus != "All")
+            query = query.Where(o => o.PaymentStatus == paymentStatus);
+
+        return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+    }
+
+    /// <summary>
+    /// 依 ID 取得訂單（含明細）
+    /// </summary>
+    public async Task<Order?> GetOrderByIdAsync(int id)
+    {
+        return await _db.Orders
+            .Include(o => o.Member)
+                .ThenInclude(m => m!.Level)
+            .Include(o => o.Coupon)
+            .Include(o => o.OrderItems)
+            .FirstOrDefaultAsync(o => o.Id == id);
+    }
+
+    /// <summary>
+    /// 依 ID 取得訂單（僅主檔）
+    /// </summary>
+    public async Task<Order?> GetOrderHeaderByIdAsync(int id)
+    {
+        return await _db.Orders
+            .Include(o => o.Member)
+            .FirstOrDefaultAsync(o => o.Id == id);
     }
 }

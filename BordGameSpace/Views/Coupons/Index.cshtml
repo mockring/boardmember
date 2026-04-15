@@ -5,14 +5,16 @@
     var stats = ViewBag.Stats as Dictionary<int, (int Held, int Used)>;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>🎫 優惠券管理</h2>
-    <a asp-action="Create" class="btn btn-primary">新增優惠券</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🎫 優惠券管理</h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary">+ 新增優惠券</a>
+    </div>
 </div>
 
 <div class="card">
     <div class="card-body">
-        <table class="table table-striped">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th>名稱</th>
@@ -31,7 +33,7 @@
                 {
                     var (held, used) = stats != null && stats.ContainsKey(c.Id) ? stats[c.Id] : (0, 0);
                     var now = DateTime.Now;
-                    var isExpired = now > c.ValidUntil;
+                    var isExpired = c.ValidUntil != null && now > c.ValidUntil;
                     var isNotStarted = now < c.ValidFrom;
                     <tr>
                         <td>@c.Name</td>
@@ -57,11 +59,12 @@
                             })
                         </td>
                         <td>
-                            @c.ValidFrom:yyyy-MM<br>~ @c.ValidUntil:yyyy-MM
+                            @c.ValidFrom.ToString("yyyy/MM/dd") ~ @(c.ValidUntil?.ToString("yyyy/MM/dd") ?? "不限")
                         </td>
                         <td>
-                            @c.TotalQuantity<br>
-                            <small class="text-muted">已發: @held</small>
+                            @(c.TotalQuantity?.ToString() ?? "不限")
+                            @if (c.TotalQuantity != null)
+                            {<br><small class="text-muted">已發: @held</small>}
                         </td>
                         <td>@used</td>
                         <td>
@@ -83,10 +86,10 @@
                             }
                         </td>
                         <td>
-                            <a asp-action="Assign" asp-route-id="@c.Id" class="btn btn-sm btn-outline-success">發放</a>
-                            <a asp-action="Usage" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">使用情形</a>
-                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">編輯</a>
-                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger"
+                            <a asp-action="Assign" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">發放</a>
+                            <a asp-action="Usage" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">使用情形</a>
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">編輯</a>
+                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary"
                                onclick="return confirm('確定要刪除嗎？')">刪除</a>
                         </td>
                     </tr>

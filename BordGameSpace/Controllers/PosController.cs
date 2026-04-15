@@ -45,6 +45,7 @@ public class PosController : BaseController
     /// 電話搜尋會員
     /// </summary>
     [HttpPost]
+    [HttpGet]
     public async Task<IActionResult> SearchMember(string phone)
     {
         if (string.IsNullOrWhiteSpace(phone))
@@ -55,7 +56,6 @@ public class PosController : BaseController
         if (member == null)
             return Json(new { success = true, isMember = false, message = "非會員" });
 
-        var points = await _posService.GetMemberPointsAsync(member.Id);
         var coupons = await _posService.GetAvailableCouponsAsync(member.Id);
 
         return Json(new
@@ -70,11 +70,11 @@ public class PosController : BaseController
                 member.TotalSpending,
                 member.TotalPlayHours,
                 LevelName = member.Level?.Name,
+                LevelId = member.LevelId,
                 GameDiscount = member.Level?.GameDiscount,
                 WeekdayRate = member.Level?.WeekdayHourlyRate,
                 HolidayRate = member.Level?.HolidayHourlyRate
             },
-            points,
             coupons = coupons.Select(c => new
             {
                 c.Id,
@@ -88,20 +88,18 @@ public class PosController : BaseController
     }
 
     /// <summary>
-    /// 計算折扣
+    /// 計算折扣（per-item discount）
     /// </summary>
     [HttpPost]
     public async Task<IActionResult> CalculateDiscount([FromBody] CalculateDiscountRequest request)
     {
         Member? member = null;
-        List<Coupon> coupons = new();
 
         if (request.MemberId.HasValue)
         {
             member = await _db.Members
                 .Include(m => m.Level)
                 .FirstOrDefaultAsync(m => m.Id == request.MemberId.Value);
-            coupons = await _posService.GetAvailableCouponsAsync(request.MemberId.Value);
         }
 
         var cartItems = request.CartItems.Select(c => new CartItem
@@ -110,25 +108,72 @@ public class PosController : BaseController
             ItemId = c.ItemId,
             ItemName = c.ItemName,
             UnitPrice = c.UnitPrice,
-            Quantity = c.Quantity
+            Quantity = c.Quantity,
+            DiscountType = c.DiscountType,
+            DiscountValue = c.DiscountValue
         }).ToList();
 
-        var result = _posService.CalculateDiscount(member, cartItems, request.CouponId, request.PointsToUse, coupons);
+        var result = _posService.CalculateDiscount(member, cartItems);
 
         return Json(new
         {
             success = true,
             subtotal = result.Subtotal,
+            itemDiscount = result.ItemDiscount,
             levelDiscount = result.LevelDiscount,
-            couponDiscount = result.CouponDiscount,
-            pointsDiscount = result.PointsDiscount,
-            finalAmount = result.FinalAmount,
-            pointsEarned = member != null ? (int)result.FinalAmount : 0
+            finalAmount = result.FinalAmount
         });
     }
 
     /// <summary>
-    /// 建立訂單
+    /// 取得可用優惠券列表（for dropdown）
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAvailableCoupons(int? memberId)
+    {
+        var now = DateTime.Now;
+
+        // 若有 memberId：回傳該會員的可用優惠券（從 MemberCoupon）
+        if (memberId.HasValue && memberId.Value > 0)
+        {
+            var coupons = await _db.MemberCoupons
+                .Where(mc => mc.MemberId == memberId.Value && mc.Coupon != null && mc.Coupon.IsActive
+                    && mc.Coupon.ValidFrom <= now
+                    && (mc.Coupon.ValidUntil == null || mc.Coupon.ValidUntil >= now)
+                    && mc.UsedAt == null)
+                .Select(mc => mc.Coupon!)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.CouponType,
+                    c.DiscountValue
+                })
+                .ToListAsync();
+            return Json(new { success = true, coupons });
+        }
+
+        // 無 memberId：回傳所有可用優惠券（一般 POS 模式）
+        var allCoupons = await _db.Coupons
+            .Where(c => c.IsActive
+                && c.ValidFrom <= now
+                && (c.ValidUntil == null || c.ValidUntil >= now)
+                && (c.TotalQuantity == null || c.TotalQuantity > c.UsedCount))
+            .OrderBy(c => c.Name)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.CouponType,
+                c.DiscountValue
+            })
+            .ToListAsync();
+
+        return Json(new { success = true, coupons = allCoupons });
+    }
+
+    /// <summary>
+    /// 建立訂單（per-item discount）
     /// </summary>
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
@@ -147,14 +192,15 @@ public class PosController : BaseController
             ItemId = c.ItemId,
             ItemName = c.ItemName,
             UnitPrice = c.UnitPrice,
-            Quantity = c.Quantity
+            Quantity = c.Quantity,
+            DiscountType = c.DiscountType,
+            DiscountValue = c.DiscountValue,
+            CouponId = c.CouponId
         }).ToList();
 
         var (success, message, order) = await _posService.CreatePosOrderAsync(
             member,
             cartItems,
-            request.CouponId,
-            request.PointsToUse,
             request.Notes,
             request.PaymentMethod ?? "Cash");
 
@@ -166,8 +212,7 @@ public class PosController : BaseController
             success = true,
             message = "訂單建立成功",
             orderId = order!.Id,
-            finalAmount = order.FinalAmount,
-            pointsEarned = order.PointsEarned
+            finalAmount = order.FinalAmount
         });
     }
 
@@ -197,13 +242,24 @@ public class PosController : BaseController
         ViewBag.Products = products;
         ViewBag.Categories = products.Select(p => p.Category).Distinct().ToList();
         ViewBag.PlayRecord = play;
+        ViewBag.IsPlayCheckout = true;
 
-        // 計算遊玩費用
+        // 計算遊玩費用（含每日上限）
         var hours = play.TotalHours ?? 0;
-        var rate = play.HourlyRate;
-        play.Amount = hours * rate;
+        var dailyCap = play.Member != null
+            ? (IsHoliday(play.StartTime) ? 220m : 180m)
+            : (IsHoliday(play.StartTime) ? 280m : 240m);
+        play.Amount = Math.Min(hours * play.HourlyRate, dailyCap);
 
         return View("Index");
+    }
+
+    /// <summary>
+    /// 判斷是否為假日
+    /// </summary>
+    private bool IsHoliday(DateTime date)
+    {
+        return date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
     }
 
     /// <summary>
@@ -212,22 +268,58 @@ public class PosController : BaseController
     [HttpPost]
     public async Task<IActionResult> ConfirmCheckoutPlay([FromBody] ConfirmCheckoutRequest request)
     {
-        var play = await _db.PlayRecords.FindAsync(request.PlayId);
+        var play = await _db.PlayRecords
+            .Include(p => p.Member)
+            .FirstOrDefaultAsync(p => p.Id == request.PlayId);
         if (play == null)
             return Json(new { success = false, message = "找不到遊玩紀錄" });
 
-        var (success, message, order) = await _posService.CheckoutPlayAsync(play, request.PaymentMethod ?? "Cash");
+        // 直接使用前端購物車的項目（含數量、折扣）
+        var cartItems = request.CartItems.Select(c => new CartItem
+        {
+            ItemType = c.ItemType,
+            ItemId = c.ItemId,
+            ItemName = c.ItemName,
+            UnitPrice = c.UnitPrice,
+            Quantity = c.Quantity,
+            DiscountType = c.DiscountType,
+            DiscountValue = c.DiscountValue,
+            CouponId = c.CouponId
+        }).ToList();
+
+        var (success, message, order) = await _posService.CreatePosOrderAsync(
+            play.Member,
+            cartItems,
+            $"遊玩結帳 #{play.Id}",
+            request.PaymentMethod ?? "Cash");
 
         if (!success)
             return Json(new { success = false, message });
+
+        // 更新遊玩紀錄狀態
+        play.Status = "CheckedOut";
+        play.OrderId = order!.Id;
+
+        // 更新會員累積時數與消費
+        if (play.MemberId.HasValue)
+        {
+            var member = await _db.Members.FindAsync(play.MemberId.Value);
+            if (member != null)
+            {
+                member.TotalPlayHours += play.TotalHours ?? 0;
+                member.TotalSpending += play.Amount;
+                await _posService.CheckAndUpgradeLevelAsync(member);
+            }
+        }
+
+        await _db.SaveChangesAsync();
 
         return Json(new
         {
             success = true,
             message = "結帳成功",
-            orderId = order!.Id,
-            finalAmount = order.FinalAmount,
-            pointsEarned = order.PointsEarned
+            orderId = order.Id,
+            finalAmount = order.FinalAmount
         });
     }
 }
@@ -236,8 +328,6 @@ public class CalculateDiscountRequest
 {
     public int? MemberId { get; set; }
     public List<CartItemDto> CartItems { get; set; } = new();
-    public int? CouponId { get; set; }
-    public int PointsToUse { get; set; }
 }
 
 public class CartItemDto
@@ -247,14 +337,17 @@ public class CartItemDto
     public string ItemName { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; } = 1;
+    // 折扣欄位
+    public string DiscountType { get; set; } = "None";
+    public decimal DiscountValue { get; set; } = 0;
+    // 優惠券Id（用於扣減會員優惠券）
+    public int? CouponId { get; set; }
 }
 
 public class CreateOrderRequest
 {
     public int? MemberId { get; set; }
     public List<CartItemDto> CartItems { get; set; } = new();
-    public int? CouponId { get; set; }
-    public int PointsToUse { get; set; }
     public string? Notes { get; set; }
     public string? PaymentMethod { get; set; }
 }
@@ -263,4 +356,5 @@ public class ConfirmCheckoutRequest
 {
     public int PlayId { get; set; }
     public string? PaymentMethod { get; set; }
+    public List<CartItemDto> CartItems { get; set; } = new();
 }

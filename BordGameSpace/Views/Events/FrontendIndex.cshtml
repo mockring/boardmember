@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "活動行事曆";
+    Layout = "_Layout";
+
+    var year = ViewBag.Year;
+    var month = ViewBag.Month;
+    var daysInMonth = ViewBag.DaysInMonth;
+    var firstDayOfWeek = ViewBag.FirstDayOfWeek;
+    var events = ViewBag.Events as List<BordGameSpace.Models.Event>;
+
+    var prevMonth = month == 1 ? 12 : month - 1;
+    var prevYear = month == 1 ? year - 1 : year;
+    var nextMonth = month == 12 ? 1 : month + 1;
+    var nextYear = month == 12 ? year + 1 : year;
+
+    // 星期標題
+    var weekDays = new[] { "日", "一", "二", "三", "四", "五", "六" };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>🎪 活動行事曆</h3>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@year 年 @month 月</h5>
+        <div class="d-flex gap-2">
+            <a asp-action="FrontendIndex" asp-route-year="@prevYear" asp-route-month="@prevMonth"
+               class="btn btn-sm btn-outline-secondary">&laquo; 上月</a>
+            <a asp-action="FrontendIndex" class="btn btn-sm btn-outline-secondary">本月</a>
+            <a asp-action="FrontendIndex" asp-route-year="@nextYear" asp-route-month="@nextMonth"
+               class="btn btn-sm btn-outline-secondary">下月 &raquo;</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <style>
+            .calendar-table td {
+                aspect-ratio: 1 / 1;
+                min-height: 90px;
+                height: 90px;
+                max-width: 0; /* 讓 width: auto 配合 aspect-ratio 正常運作 */
+                vertical-align: top;
+                padding: 6px;
+                position: relative;
+            }
+            .calendar-table td .day-num {
+                font-weight: bold;
+                margin-bottom: 4px;
+            }
+            .calendar-table td .event-badge {
+                font-size: 0.9rem;
+                display: block;
+                margin-bottom: 2px;
+                word-break: break-word;
+                white-space: normal;
+                max-width: 100%;
+                background-color: #0d6efd;
+                color: #fff;
+                text-decoration: none;
+            }
+        </style>
+        <table class="table table-bordered mb-0 text-center calendar-table">
+            <thead>
+                <tr>
+                    @foreach (var d in weekDays)
+                    {
+                        <th class="bg-light">@d</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var day = 1;
+                    var totalCells = firstDayOfWeek + daysInMonth;
+                    var rows = (int)Math.Ceiling(totalCells / 7.0);
+                    for (var r = 0; r < rows; r++)
+                    {
+                        <tr>
+                            @for (var c = 0; c < 7; c++)
+                            {
+                                var cellIndex = r * 7 + c;
+                                if (cellIndex < firstDayOfWeek || day > daysInMonth)
+                                {
+                                    <td class="bg-light"></td>
+                                }
+                                else
+                                {
+                                    var date = new DateTime(year, month, day);
+                                    var dayEvents = events?.Where(e => e.EventDate.Date == date.Date).ToList();
+                                    <td>
+                                        <div class="day-num">@day</div>
+                                        @if (dayEvents != null && dayEvents.Any())
+                                        {
+                                            foreach (var evt in dayEvents)
+                                            {
+                                                <a asp-action="FrontendDetails" asp-route-id="@evt.Id"
+                                                   class="badge bg-primary event-badge text-decoration-none">@evt.Title</a>
+                                            }
+                                        }
+                                    </td>
+                                    day++;
+                                }
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card bg-light mt-4">
+    <div class="card-body text-center py-2">
+        <p class="mb-1"><strong>📍 地址：</strong>桃園市桃園區國際路一段1126號2樓</p>
+        <p class="mb-1"><strong>📞 電話：</strong>03-228 9810</p>
+        <p class="mb-0"><strong>🕐 營業時間：</strong>週二至週五 18:00-22:00 ｜ 週六至週日 12:00-22:00</p>
+    </div>
+</div>

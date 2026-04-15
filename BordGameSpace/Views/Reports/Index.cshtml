@@ -1,0 +1,145 @@
+@{
+    ViewData["Title"] = "報表中心";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>📊 報表中心</h3>
+</div>
+
+<!-- 月份切換 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3" method="get">
+            <div class="col-md-2">
+                <label class="form-label">年份</label>
+                <select name="year" class="form-select">
+                    @for (int y = DateTime.Now.Year; y >= 2024; y--)
+                    {
+                        <option value="@y" selected="@(y == ViewBag.Year)">@y 年</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">月份</label>
+                <select name="month" class="form-select">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(m == ViewBag.Month)">@m 月</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">查詢</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 當月總營收 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center border-primary">
+            <div class="card-header bg-primary text-white">
+                💰 當月總營收
+            </div>
+            <div class="card-body">
+                <h2 class="text-primary mb-0">@ViewBag.Revenue.ToString("N0") 元</h2>
+                <p class="text-muted mb-0">@ViewBag.Year 年 @ViewBag.Month 月</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 等級分布 -->
+@if (ViewBag.LevelDistribution != null && ((List<BordGameSpace.Models.LevelDistribution>)ViewBag.LevelDistribution).Any())
+{
+    var levelDist = (List<BordGameSpace.Models.LevelDistribution>)ViewBag.LevelDistribution;
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">🏅 等級分布</div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead>
+                            <tr><th>等級</th><th>人數</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var l in levelDist)
+                            {
+                                <tr>
+                                    <td>@l.LevelName</td>
+                                    <td>@l.MemberCount 人</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 暢銷商品 TOP10 -->
+@if (ViewBag.TopProducts != null && ((List<BordGameSpace.Models.ProductSalesRank>)ViewBag.TopProducts).Any())
+{
+    var topProducts = (List<BordGameSpace.Models.ProductSalesRank>)ViewBag.TopProducts;
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">🏆 暢銷商品 TOP10（依銷售數量）</div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead>
+                            <tr><th>#</th><th>商品名稱</th><th>銷售數量</th><th>銷售金額</th></tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < topProducts.Count; i++)
+                            {
+                                var p = topProducts[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@p.ProductName</td>
+                                    <td>@p.TotalQuantity</td>
+                                    <td>@p.TotalRevenue.ToString("N0") 元</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 會員消費排行 TOP10 -->
+@if (ViewBag.TopMembers != null && ((List<BordGameSpace.Models.MemberSpendRank>)ViewBag.TopMembers).Any())
+{
+    var topMembers = (List<BordGameSpace.Models.MemberSpendRank>)ViewBag.TopMembers;
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">👑 會員消費排行 TOP10（依消費金額）</div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead>
+                            <tr><th>#</th><th>會員姓名</th><th>消費金額</th><th>訂單數</th></tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < topMembers.Count; i++)
+                            {
+                                var m = topMembers[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@m.MemberName</td>
+                                    <td>@m.TotalSpending.ToString("N0") 元</td>
+                                    <td>@m.OrderCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,213 @@
+@model IEnumerable<BordGameSpace.Models.Product>
+@{
+    ViewData["Title"] = "申請遊戲租借";
+    Layout = "_Layout";
+    var categories = Model?.Select(p => p.Category).Distinct().ToList() ?? new List<string>();
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h4>@ViewBag.MemberName</h4>
+                <span class="badge bg-primary">@ViewBag.MemberLevel</span>
+            </div>
+        </div>
+        <partial name="_MemberNav" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>🎲 申請遊戲租借</h3>
+        </div>
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        @if (!Model?.Any() ?? true)
+        {
+            <div class="alert alert-info">目前沒有可租借的遊戲</div>
+        }
+        else
+        {
+            <form asp-action="MemberCreate" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="card mb-3">
+                    <div class="card-header">選擇要租借的遊戲</div>
+                    <div class="card-body">
+                        <!-- 類別篩選 -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm category-filter active" data-category="all">全部</button>
+                            @foreach (var cat in categories)
+                            {
+                                <button type="button" class="btn btn-outline-primary btn-sm category-filter" data-category="@cat">@cat</button>
+                            }
+                        </div>
+
+                        <!-- 搜尋 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" id="searchInput" class="form-control" placeholder="搜尋遊戲名稱...">
+                                    <button class="btn btn-primary" type="button" onclick="filterGames()">搜尋</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分頁 -->
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span id="gameCount" class="text-muted small"></span>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="prevPageBtn" onclick="prevPage()" disabled>上一頁</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="nextPageBtn" onclick="nextPage()">下一頁</button>
+                            </div>
+                        </div>
+
+                        <!-- 遊戲列表 -->
+                        <div class="row" id="gameList">
+                            @foreach (var game in Model!)
+                            {
+                                <div class="col-md-3 mb-3 game-item"
+                                     data-category="@game.Category"
+                                     data-game-id="@game.Id"
+                                     data-name="@game.Name">
+                                    <div class="card h-100">
+                                        <div class="card-body text-center">
+                                            <h6>@game.Name</h6>
+                                            <p class="text-primary mb-1">定價：@game.Price.ToString("N0") 元</p>
+                                            <p class="small text-muted mb-2">庫存: @(game.Stock?.ToString() ?? "-")</p>
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="selectGame('@game.Id', '@game.Name.Replace("'", "\\'")', @game.Price)">選擇</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- 選擇隱藏欄位 -->
+                        <input type="hidden" id="selectedProductId" name="productId" value="" required />
+
+                        <!-- 已選擇的遊戲提示 -->
+                        <div id="selectedGameInfo" class="alert alert-info mt-3" style="display: none;">
+                            已選擇：<strong id="selectedGameName"></strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 取件資訊 -->
+                <div class="card mb-3">
+                    <div class="card-header">取件資訊</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">到店取件日期</label>
+                                <input type="date" name="pickupDate" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">到店取件時間</label>
+                                <input type="time" name="pickupTime" class="form-control" value="12:00" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-success" id="submitBtn" disabled>
+                        📋 送出申請
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">返回列表</a>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const PAGE_SIZE = 8;
+    let filteredGameIds = new Set();
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.game-item').forEach(item => filteredGameIds.add(item.dataset.gameId));
+        applyPagination();
+    });
+
+    // 選擇遊戲
+    function selectGame(id, name, price) {
+        document.getElementById('selectedProductId').value = id;
+        document.getElementById('selectedGameName').textContent = name;
+
+        document.getElementById('selectedGameInfo').style.display = 'block';
+        document.getElementById('submitBtn').disabled = false;
+
+        // 更新卡片選中狀態
+        document.querySelectorAll('.game-item').forEach(item => {
+            item.querySelector('.card').classList.remove('border-primary', 'border-2');
+        });
+        const selectedCard = document.querySelector(`.game-item[data-game-id="${id}"] .card`);
+        if (selectedCard) selectedCard.classList.add('border-primary', 'border-2');
+    }
+
+    // 搜尋篩選
+    function filterGames() {
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+        filteredGameIds = new Set();
+        document.querySelectorAll('.game-item').forEach(item => {
+            const name = item.dataset.name.toLowerCase();
+            if (keyword === '' || name.includes(keyword)) filteredGameIds.add(item.dataset.gameId);
+        });
+        currentPage = 1;
+        applyPagination();
+    }
+
+    document.getElementById('searchInput').addEventListener('keyup', function (e) {
+        if (e.key === 'Enter') filterGames();
+        if (this.value === '') filterGames();
+    });
+
+    // 類別篩選
+    document.querySelectorAll('.category-filter').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.category-filter').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const category = this.dataset.category;
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            filteredGameIds = new Set();
+            document.querySelectorAll('.game-item').forEach(item => {
+                const matchCategory = category === 'all' || item.dataset.category === category;
+                const matchSearch = keyword === '' || item.dataset.name.toLowerCase().includes(keyword);
+                if (matchCategory && matchSearch) filteredGameIds.add(item.dataset.gameId);
+            });
+            currentPage = 1;
+            applyPagination();
+        });
+    });
+
+    // 分頁
+    function getVisibleGames() {
+        return Array.from(document.querySelectorAll('.game-item')).filter(item => filteredGameIds.has(item.dataset.gameId));
+    }
+
+    function applyPagination() {
+        const visible = getVisibleGames();
+        const total = visible.length;
+        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        document.getElementById('gameCount').textContent = total === 0 ? '' : `顯示 ${(currentPage - 1) * PAGE_SIZE + 1} - ${Math.min(currentPage * PAGE_SIZE, total)} / 共 ${total} 項`;
+
+        document.querySelectorAll('.game-item').forEach(item => { item.style.display = 'none'; });
+        visible.forEach((item, i) => {
+            if (i >= (currentPage - 1) * PAGE_SIZE && i < currentPage * PAGE_SIZE) item.style.display = 'block';
+        });
+
+        document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+    }
+
+    function prevPage() { if (currentPage > 1) { currentPage--; applyPagination(); } }
+    function nextPage() { if (currentPage < Math.ceil(getVisibleGames().length / PAGE_SIZE)) { currentPage++; applyPagination(); } }
+</script>

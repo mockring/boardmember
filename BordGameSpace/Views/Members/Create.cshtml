@@ -1,4 +1,4 @@
-@model BordGameSpace.Models.Member
+@model BordGameSpace.DTOs.CreateMemberDto
 @{
     ViewData["Title"] = "新增會員";
     Layout = "_AdminLayout";
@@ -14,6 +14,18 @@
         <form method="post" asp-action="Create">
             @Html.AntiForgeryToken()
 
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
             @if (TempData["ErrorMessage"] != null)
             {
                 <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
@@ -21,24 +33,24 @@
 
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">姓名 <span class="text-danger">*</span></label>
-                    <input type="text" name="Name" class="form-control" required maxlength="100"
-                           value="@Model?.Name">
+                    <label asp-for="Name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                    <input asp-for="Name" class="form-control" placeholder="輸入姓名">
+                    <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">電話 <span class="text-danger">*</span></label>
-                    <input type="text" name="Phone" class="form-control" required maxlength="20"
-                           value="@Model?.Phone" placeholder="0912345678">
+                    <label asp-for="Phone" class="form-label">電話 <span class="text-danger">*</span></label>
+                    <input asp-for="Phone" class="form-control" placeholder="0912345678">
+                    <span asp-validation-for="Phone" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" name="Email" class="form-control" required maxlength="255"
-                           value="@Model?.Email">
+                    <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input asp-for="Email" class="form-control" placeholder="example@email.com">
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">生日</label>
-                    <input type="date" name="Birthday" class="form-control"
-                           value="@(Model?.Birthday?.ToString("yyyy-MM-dd") ?? "")">
+                    <label asp-for="Birthday" class="form-label">生日</label>
+                    <input asp-for="Birthday" class="form-control" type="date">
+                    <span asp-validation-for="Birthday" class="text-danger"></span>
                 </div>
             </div>
 

@@ -22,7 +22,7 @@
             </div>
             <div class="col-md-3">
                 <strong>有效期限：</strong>
-                @coupon?.ValidFrom:yyyy-MM ~ @coupon?.ValidUntil:yyyy-MM
+                @coupon?.ValidFrom.ToString("yyyy/MM/dd") ~ @(coupon?.ValidUntil?.ToString("yyyy/MM/dd") ?? "不限")
             </div>
             <div class="col-md-3">
                 <strong>統計：</strong>

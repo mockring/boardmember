@@ -29,15 +29,11 @@ public class AdminController : BaseController
         if (!IsAdminLoggedIn)
             return RedirectToAction("Login", "Admin");
 
-        // 低庫存商品
-        var lowStockProducts = await _adminService.GetLowStockProductsAsync();
-        ViewBag.LowStockProducts = lowStockProducts;
-        ViewBag.LowStockCount = lowStockProducts.Count;
-
-        // 今日統計
-        var today = DateTime.Today;
+        // 今日統計（使用台灣時區）
+        var taiwanNow = TaiwanNow;
+        var todayStart = taiwanNow.Date;
         var todayOrders = await _db.Orders
-            .Where(o => o.CreatedAt >= today && o.PaymentStatus == "Paid")
+            .Where(o => o.CreatedAt >= todayStart && o.PaymentStatus == "Paid")
             .ToListAsync();
 
         ViewBag.TodayOrderCount = todayOrders.Count;
@@ -49,6 +45,35 @@ public class AdminController : BaseController
             .ToListAsync();
         ViewBag.ActivePlayCount = activePlays.Count;
         ViewBag.ActivePlays = activePlays;
+        ViewBag.TaiwanNow = taiwanNow;
+
+        // 進行中的遊戲租借
+        var activeRentals = await _db.GameRentals
+            .Include(g => g.Product)
+            .Include(g => g.Member)
+            .Where(g => g.Status == "Pending" || g.Status == "Approved" || g.Status == "Borrowed")
+            .OrderBy(g => g.Status == "Pending" ? 0 : g.Status == "Approved" ? 1 : 2)
+            .ThenByDescending(g => g.CreatedAt)
+            .ToListAsync();
+        ViewBag.ActiveRentals = activeRentals;
+        ViewBag.ActiveRentalCount = activeRentals.Count;
+
+        // 已預訂的空間預約
+        var today = taiwanNow.Date;
+        var upcomingReservations = await _db.SpaceReservations.Where(r => r.ReservationDate >= today && (r.Status == "Approved" || r.Status == "Pending")).ToListAsync();
+        ViewBag.UpcomingReservations = upcomingReservations;
+        ViewBag.UpcomingReservationCount = upcomingReservations.Count;
+        ViewBag.ActiveReservations = upcomingReservations;
+        ViewBag.ActiveReservationCount = upcomingReservations.Count;
+
+        // 報名中的活動
+        var openEvents = await _db.Events
+            .Include(e => e.Registrations)
+            .Where(e => e.Status == "RegistrationOpen" && e.EventDate >= today)
+            .OrderBy(e => e.EventDate)
+            .ToListAsync();
+        ViewBag.OpenEvents = openEvents;
+        ViewBag.OpenEventCount = openEvents.Count;
 
         return View();
     }

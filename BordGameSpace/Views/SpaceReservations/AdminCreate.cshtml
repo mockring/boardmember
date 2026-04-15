@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "新增訂位預約";
+    Layout = "_AdminLayout";
+}
+
+<h2 class="mb-4">📅 新增 訂位預約</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form asp-action="AdminCreate" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="card mb-4">
+        <div class="card-header">預約資訊</div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">會員電話（選填）</label>
+                        <div class="input-group">
+                            <input type="text" id="phoneInput" class="form-control" placeholder="輸入電話號碼">
+                            <button class="btn btn-outline-primary" type="button" onclick="searchMember()">
+                                <i class="bi bi-search"></i> 搜尋
+                            </button>
+                        </div>
+                    </div>
+                    <div id="memberInfo" class="alert alert-info mb-3" style="display: none;">
+                        <strong id="memberName"></strong>（<span id="memberLevel"></span>）
+                        <br>電話：<span id="memberPhone"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="customerName" class="form-control" placeholder="請輸入姓名" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">電話 <span class="text-danger">*</span></label>
+                        <input type="tel" name="phone" id="customerPhone" class="form-control" placeholder="請輸入電話" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">預約日期 <span class="text-danger">*</span></label>
+                    <input type="date" name="reservationDate" class="form-control" required
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">人數 <span class="text-danger">*</span></label>
+                    <input type="number" name="peopleCount" class="form-control" value="2" min="1" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">空間 <span class="text-danger">*</span></label>
+                    <select name="spaceType" class="form-select" required>
+                        <option value="訂位" selected>訂位</option>
+                        <option value="包廂">包廂</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">開始時間 <span class="text-danger">*</span></label>
+                    <input type="time" name="startTime" class="form-control" required value="09:00" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">結束時間 <span class="text-danger">*</span></label>
+                    <input type="time" name="endTime" class="form-control" required value="17:00" />
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">備註（選填）</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="例如：感謝"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">建立預約</button>
+        <a asp-action="AdminIndex" class="btn btn-outline-secondary">返回列表</a>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+async function searchMember() {
+    const phone = document.getElementById('phoneInput').value.trim();
+    if (!phone) { alert('請輸入電話號碼'); return; }
+
+    try {
+        const response = await fetch('/Pos/SearchMember', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'phone=' + encodeURIComponent(phone)
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.isMember) {
+                document.getElementById('memberInfo').style.display = 'block';
+                document.getElementById('memberName').textContent = data.member.name;
+                document.getElementById('memberLevel').textContent = data.member.levelName || '一般';
+                document.getElementById('memberPhone').textContent = data.member.phone;
+                document.getElementById('customerName').value = data.member.name;
+                document.getElementById('customerPhone').value = data.member.phone;
+            } else {
+                document.getElementById('memberInfo').style.display = 'none';
+                document.getElementById('customerPhone').value = phone;
+            }
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        alert('搜尋失敗: ' + e.message);
+    }
+}
+</script>
+}

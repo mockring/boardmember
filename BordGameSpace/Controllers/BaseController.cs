@@ -32,6 +32,16 @@ public class BaseController : Controller
     /// </summary>
     protected bool IsAdminLoggedIn => CurrentAdminId.HasValue;
 
+    /// <summary>
+    /// 台灣時區 (UTC+8)
+    /// </summary>
+    protected static TimeZoneInfo TaiwanZone => TimeZoneHelper.TaiwanZone;
+
+    /// <summary>
+    /// 取得目前台灣當地時間
+    /// </summary>
+    protected DateTime TaiwanNow => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneHelper.TaiwanZone);
+
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         base.OnActionExecuting(context);

@@ -1,0 +1,124 @@
+@model IEnumerable<BordGameSpace.Models.SpaceReservation>
+@{
+    ViewData["Title"] = "訂位預約管理";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>📅 訂位預約管理</h3>
+    <a asp-action="AdminCreate" class="btn btn-primary">+ 新增預約</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mb-4">@TempData["ErrorMessage"]</div>
+}
+
+<!-- 篩選 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3" method="get">
+            <div class="col-md-3">
+                <label class="form-label">狀態篩選</label>
+                <select name="status" class="form-select">
+                    <option value="">全部</option>
+                    <option value="Pending" selected="@(ViewBag.Status == "Pending")">審核中</option>
+                    <option value="Approved" selected="@(ViewBag.Status == "Approved")">已通過</option>
+                    <option value="Rejected" selected="@(ViewBag.Status == "Rejected")">已拒絕</option>
+                    <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">已取消</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">篩選</button>
+                <a asp-action="AdminIndex" class="btn btn-outline-secondary">清除</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mb-4">目前沒有預約記錄</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>申請時間</th>
+                        <th>會員姓名</th>
+                        <th>電話</th>
+                        <th>預約日期</th>
+                        <th>時段</th>
+                        <th>人數</th>
+                        <th>空間</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr class="@(r.Status == "Pending" ? "table-warning" : "")">
+                            <td>@r.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@r.Name</td>
+                            <td>@r.Phone</td>
+                            <td>@r.ReservationDate.ToString("yyyy-MM-dd")</td>
+                            <td>@r.StartTime - @r.EndTime</td>
+                            <td>@r.PeopleCount 人</td>
+                            <td>@r.SpaceType</td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">審核中</span>
+                                }
+                                else if (r.Status == "Approved")
+                                {
+                                    <span class="badge bg-success">已通過</span>
+                                }
+                                else if (r.Status == "Rejected")
+                                {
+                                    <span class="badge bg-danger">已拒絕</span>
+                                }
+                                else if (r.Status == "Cancelled")
+                                {
+                                    <span class="badge bg-secondary">已取消</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                                @if (r.OrderId == null)
+                                {
+                                    <form asp-action="DeleteConfirmed" asp-route-id="@r.Id" method="post" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('確定刪除此預約？')">刪除</button>
+                                    </form>
+                                }
+                                @if (r.Status == "Pending")
+                                {
+                                    <a asp-action="Review" asp-route-id="@r.Id" asp-route-approved="true" class="btn btn-sm btn-success"
+                                       onclick="return confirm('確定通過此預約？')">通過</a>
+                                    <a asp-action="Review" asp-route-id="@r.Id" asp-route-approved="false" class="btn btn-sm btn-danger"
+                                       onclick="return confirm('確定拒絕此預約？')">拒絕</a>
+                                }
+                                else if (r.Status == "Approved" && r.OrderId == null)
+                                {
+                                }
+                                else if (r.OrderId != null)
+                                {
+                                    <span class="badge bg-info">已開單</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

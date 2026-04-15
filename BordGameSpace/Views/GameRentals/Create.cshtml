@@ -1,0 +1,292 @@
+@{
+    ViewData["Title"] = "新增遊戲租借";
+    Layout = "_AdminLayout";
+    var games = Model as IEnumerable<Product>;
+    var categories = games?.Select(p => p.Category).Distinct().ToList() ?? new List<string>();
+}
+
+<h2 class="mb-4">🎲 新增遊戲租借</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="row">
+    <!-- 左側：會員搜尋 + 租借資料 -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">👤 會員搜尋</div>
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="text" id="phoneInput" class="form-control" placeholder="輸入電話號碼">
+                    <button class="btn btn-primary" type="button" onclick="searchMember()">搜尋</button>
+                </div>
+                <div id="memberInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong>會員：</strong><span id="memberName"></span><br>
+                        <strong>等級：</strong><span id="memberLevel"></span><br>
+                        <strong>電話：</strong><span id="memberPhone"></span>
+                    </div>
+                    <input type="hidden" id="memberId" name="MemberId">
+                </div>
+                <div id="nonMemberInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-warning">找不到會員，請輸入消費者資料</div>
+                    <div class="mb-2">
+                        <label class="form-label">姓名</label>
+                        <input type="text" id="guestName" name="GuestName" class="form-control" placeholder="消費者姓名">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">電話</label>
+                        <input type="text" id="guestPhone" name="GuestPhone" class="form-control" placeholder="消費者電話">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">📋 租借資料</div>
+            <div class="card-body">
+                <form method="post" id="rentalForm">
+                    <input type="hidden" id="memberIdHidden" name="MemberId">
+                    <div class="mb-3">
+                        <label class="form-label">借出日期</label>
+                        <input type="date" id="borrowDate" name="BorrowDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">應還日期</label>
+                        <input type="date" id="dueDate" name="DueDate" class="form-control" value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">租金（元）</label>
+                        <input type="number" id="rentalFee" name="RentalFee" class="form-control" min="0" step="100" value="0" required>
+                        <small class="text-muted">根據遊戲定價自動帶入，可修改</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">押金（元）</label>
+                        <input type="number" id="deposit" name="Deposit" class="form-control" min="0" step="100" value="0" readonly>
+                        <small class="text-muted">會員免押金，非會員為遊戲定價</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">選擇遊戲 <span class="text-danger">*</span></label>
+                        <select id="productSelect" class="form-select" required>
+                            <option value="">請先搜尋會員再選擇遊戲</option>
+                        </select>
+                        <input type="hidden" id="selectedProductId" name="ProductId">
+                        <input type="hidden" id="selectedProductPrice">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100" onclick="return prepareSubmit()">
+                        <i class="bi bi-check-circle"></i> 建立租借
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右側：遊戲選擇（POS 商品列表風格） -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-controller"></i> 選擇遊戲
+            </div>
+            <div class="card-body">
+                <!-- 搜尋 & 類別篩選 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="productSearchInput" class="form-control" placeholder="搜尋遊戲名稱...">
+                            <button class="btn btn-primary" onclick="filterProductsBySearch()">
+                                <i class="bi bi-search"></i> 搜尋
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 類別篩選 -->
+                <div class="mb-3">
+                    <button class="btn btn-outline-primary btn-sm category-filter active" data-category="all">全部</button>
+                    @foreach (var cat in categories)
+                    {
+                        <button class="btn btn-outline-primary btn-sm category-filter" data-category="@cat">@cat</button>
+                    }
+                </div>
+                <!-- 分頁 -->
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span id="productCount" class="text-muted small"></span>
+                    <div>
+                        <button class="btn btn-sm btn-primary" id="prevPageBtn" onclick="prevPage()" disabled>上一頁</button>
+                        <button class="btn btn-sm btn-primary" id="nextPageBtn" onclick="nextPage()">下一頁</button>
+                    </div>
+                </div>
+                <!-- 遊戲列表 -->
+                <div class="row" id="productList">
+                    @foreach (var game in games ?? Enumerable.Empty<Product>())
+                    {
+                        <div class="col-md-3 mb-3 product-item" data-category="@game.Category" data-product-id="@game.Id" data-price="@game.Price" data-name="@game.Name">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h6>@game.Name</h6>
+                                    <p class="text-primary mb-1">定價：@game.Price.ToString("N0") 元</p>
+                                    <p class="small text-muted mb-2">庫存: @(game.Stock?.ToString() ?? "-")</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="selectGame(@game.Id, '@game.Name', @game.Price)">選擇</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let memberData = null;
+    let currentPage = 1;
+    const PAGE_SIZE = 8;
+    let filteredProductIds = new Set();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.product-item').forEach(item => filteredProductIds.add(item.dataset.productId));
+        applyPagination();
+    });
+
+    // ========== 會員搜尋 ==========
+    async function searchMember() {
+        const phone = document.getElementById('phoneInput').value.trim();
+        if (!phone) { alert('請輸入電話號碼'); return; }
+
+        try {
+            const response = await fetch('/Members/Search?phone=' + encodeURIComponent(phone));
+            const data = await response.json();
+
+            if (data.success && data.isMember) {
+                memberData = data.member;
+                document.getElementById('memberInfo').style.display = 'block';
+                document.getElementById('nonMemberInfo').style.display = 'none';
+                document.getElementById('memberId').value = data.member.id;
+                document.getElementById('memberName').textContent = data.member.name;
+                document.getElementById('memberLevel').textContent = data.member.levelName || '一般';
+                document.getElementById('memberPhone').textContent = data.member.phone;
+                updateDeposit();
+                document.getElementById('productSelect').innerHTML = '<option value="">請選擇遊戲...</option>';
+            } else {
+                memberData = null;
+                document.getElementById('memberInfo').style.display = 'none';
+                document.getElementById('nonMemberInfo').style.display = 'block';
+                document.getElementById('guestPhone').value = phone;
+                updateDeposit();
+                document.getElementById('productSelect').innerHTML = '<option value="">請選擇遊戲...</option>';
+            }
+        } catch (e) {
+            alert('搜尋失敗: ' + e.message);
+        }
+    }
+
+    // ========== 選擇遊戲 ==========
+    function selectGame(id, name, price) {
+        if (!document.getElementById('memberId').value && !document.getElementById('guestName').value) {
+            alert('請先搜尋會員或輸入消費者資料');
+            return;
+        }
+
+        document.getElementById('selectedProductId').value = id;
+        document.getElementById('selectedProductPrice').value = price;
+
+        // 自動計算租金
+        let rentalFee = 0;
+        if (price <= 1000) rentalFee = 100;
+        else if (price <= 2000) rentalFee = 200;
+        else if (price <= 3000) rentalFee = 300;
+        else rentalFee = 400;
+        document.getElementById('rentalFee').value = rentalFee;
+
+        // 更新下拉選單
+        const select = document.getElementById('productSelect');
+        select.innerHTML = `<option value="${id}" selected>${name}（定價 ${price} 元）</option>`;
+
+        updateDeposit();
+        alert(`已選擇：${name}`);
+    }
+
+    // ========== 押金計算 ==========
+    function updateDeposit() {
+        const price = parseFloat(document.getElementById('selectedProductPrice').value) || 0;
+        const isMember = memberData != null;
+        document.getElementById('deposit').value = isMember ? 0 : price;
+    }
+
+    // ========== 表單提交前 ==========
+    function prepareSubmit() {
+        const memberId = document.getElementById('memberId').value;
+        const guestName = document.getElementById('guestName').value;
+        const productId = document.getElementById('selectedProductId').value;
+
+        if (!productId) { alert('請選擇遊戲'); return false; }
+        if (!memberId && !guestName) { alert('請搜尋會員或輸入消費者資料'); return false; }
+
+        document.getElementById('memberIdHidden').value = memberId || '';
+        return true;
+    }
+
+    // ========== 搜尋 ==========
+    function filterProductsBySearch() {
+        const keyword = document.getElementById('productSearchInput').value.trim().toLowerCase();
+        filteredProductIds = new Set();
+        document.querySelectorAll('.product-item').forEach(item => {
+            const name = item.dataset.name.toLowerCase();
+            if (keyword === '' || name.includes(keyword)) filteredProductIds.add(item.dataset.productId);
+        });
+        currentPage = 1;
+        applyPagination();
+    }
+    document.getElementById('productSearchInput').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') filterProductsBySearch();
+        if (this.value === '') filterProductsBySearch();
+    });
+
+    // ========== 類別篩選 ==========
+    document.querySelectorAll('.category-filter').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.category-filter').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const category = this.dataset.category;
+            const searchKeyword = document.getElementById('productSearchInput').value.trim().toLowerCase();
+            filteredProductIds = new Set();
+            document.querySelectorAll('.product-item').forEach(item => {
+                const matchCategory = category === 'all' || item.dataset.category === category;
+                const matchSearch = searchKeyword === '' || item.dataset.name.toLowerCase().includes(searchKeyword);
+                if (matchCategory && matchSearch) filteredProductIds.add(item.dataset.productId);
+            });
+            currentPage = 1;
+            applyPagination();
+        });
+    });
+
+    // ========== 分頁 ==========
+    function getVisibleProducts() {
+        return Array.from(document.querySelectorAll('.product-item')).filter(item => filteredProductIds.has(item.dataset.productId));
+    }
+
+    function applyPagination() {
+        const visible = getVisibleProducts();
+        const total = visible.length;
+        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        document.getElementById('productCount').textContent = total === 0 ? '' : `顯示 ${(currentPage - 1) * PAGE_SIZE + 1} - ${Math.min(currentPage * PAGE_SIZE, total)} / 共 ${total} 項`;
+
+        document.querySelectorAll('.product-item').forEach(item => { item.style.display = 'none'; });
+        visible.forEach((item, i) => {
+            if (i >= (currentPage - 1) * PAGE_SIZE && i < currentPage * PAGE_SIZE) item.style.display = 'block';
+        });
+
+        document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+    }
+
+    function prevPage() { if (currentPage > 1) { currentPage--; applyPagination(); } }
+    function nextPage() { if (currentPage < Math.ceil(getVisibleProducts().length / PAGE_SIZE)) { currentPage++; applyPagination(); } }
+</script>

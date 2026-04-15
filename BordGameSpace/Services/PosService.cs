@@ -38,44 +38,43 @@ public class PosService
         var now = DateTime.Now;
         return await _db.MemberCoupons
             .Where(mc => mc.MemberId == memberId && mc.Coupon != null && mc.Coupon.IsActive
-                && mc.Coupon.ValidFrom <= now && mc.Coupon.ValidUntil >= now && mc.UsedAt == null)
+                && mc.Coupon.ValidFrom <= now && (mc.Coupon.ValidUntil == null || mc.Coupon.ValidUntil >= now) && mc.UsedAt == null)
             .Select(mc => mc.Coupon!)
             .ToListAsync();
     }
 
     /// <summary>
-    /// 取得會員積分
-    /// </summary>
-    public async Task<int> GetMemberPointsAsync(int memberId)
-    {
-        var lastTx = await _db.PointTransactions
-            .Where(pt => pt.MemberId == memberId)
-            .OrderByDescending(pt => pt.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        return lastTx?.Balance ?? 0;
-    }
-
-    /// <summary>
-    /// 計算訂單折扣
+    /// 計算訂單折扣（per-item discount）
     /// </summary>
     public DiscountCalculationResult CalculateDiscount(
         Member? member,
-        List<CartItem> cartItems,
-        int? couponId,
-        int pointsToUse,
-        List<Coupon> availableCoupons)
+        List<CartItem> cartItems)
     {
         var result = new DiscountCalculationResult();
 
         // 原始金額
         result.Subtotal = cartItems.Sum(c => c.UnitPrice * c.Quantity);
 
-        // 會員等級折扣（遊戲商品 95/90 折）
+        // 每項商品的折扣
+        decimal itemDiscount = 0;
+        foreach (var item in cartItems)
+        {
+            if (item.DiscountType == "Percentage")
+            {
+                itemDiscount += (item.UnitPrice * item.DiscountValue / 100) * item.Quantity;
+            }
+            else if (item.DiscountType == "FixedAmount")
+            {
+                itemDiscount += item.DiscountValue * item.Quantity;
+            }
+        }
+        result.ItemDiscount = itemDiscount;
+
+        // 會員等級折扣（遊戲商品 95/90 折）- 僅對無折扣的商品
         decimal levelDiscount = 0;
         if (member != null && member.Level != null)
         {
-            foreach (var item in cartItems.Where(c => c.ItemType == "Product"))
+            foreach (var item in cartItems.Where(c => c.ItemType == "Product" && c.DiscountType == "None"))
             {
                 var product = _db.Products.Find(item.ItemId);
                 if (product != null && product.Category == "桌遊")
@@ -86,57 +85,18 @@ public class PosService
         }
         result.LevelDiscount = levelDiscount;
 
-        // 優惠券折扣
-        decimal couponDiscount = 0;
-        if (couponId.HasValue)
-        {
-            var coupon = availableCoupons.FirstOrDefault(c => c.Id == couponId.Value);
-            if (coupon != null)
-            {
-                if (coupon.CouponType == "FixedAmount")
-                {
-                    couponDiscount = coupon.DiscountValue;
-                }
-                else if (coupon.CouponType == "Percentage")
-                {
-                    couponDiscount = (result.Subtotal - levelDiscount) * (coupon.DiscountValue / 100);
-                }
-                result.AppliedCoupon = coupon;
-            }
-        }
-        result.CouponDiscount = couponDiscount;
-
-        // 積分折抵
-        int maxPoints = 0;
-        int memberPoints = 0;
-        if (member != null)
-        {
-            memberPoints = GetMemberPointsAsync(member.Id).Result;
-            maxPoints = Math.Min(memberPoints, (int)(result.Subtotal - levelDiscount - couponDiscount));
-        }
-        pointsToUse = Math.Min(pointsToUse, maxPoints);
-        result.PointsDiscount = pointsToUse;
-        result.PointsToUse = pointsToUse;
-
         // 最終金額
-        decimal afterLevel = result.Subtotal - levelDiscount;
-        decimal afterCoupon = Math.Max(0, afterLevel - couponDiscount);
-        result.FinalAmount = Math.Max(0, afterCoupon - pointsToUse);
-
-        // 計算可獲得積分
-        result.PointsEarned = member != null ? (int)result.FinalAmount : 0;
+        result.FinalAmount = Math.Max(0, result.Subtotal - result.ItemDiscount - levelDiscount);
 
         return result;
     }
 
     /// <summary>
-    /// 建立 POS 訂單
+    /// 建立 POS 訂單（per-item discount）
     /// </summary>
     public async Task<(bool Success, string Message, Order? Order)> CreatePosOrderAsync(
         Member? member,
         List<CartItem> cartItems,
-        int? couponId,
-        int pointsToUse,
         string? notes,
         string paymentMethod = "Cash")
     {
@@ -144,9 +104,8 @@ public class PosService
 
         try
         {
-            // 計算折扣
-            var availableCoupons = member != null ? await GetAvailableCouponsAsync(member.Id) : new List<Coupon>();
-            var discount = CalculateDiscount(member, cartItems, couponId, pointsToUse, availableCoupons);
+            // 計算折扣（per-item）
+            var discount = CalculateDiscount(member, cartItems);
 
             // 建立訂單
             var order = new Order
@@ -156,11 +115,8 @@ public class PosService
                 MemberName = member?.Name ?? "非會員",
                 MemberPhone = member?.Phone,
                 TotalAmount = discount.Subtotal,
-                DiscountAmount = discount.LevelDiscount + discount.CouponDiscount + discount.PointsDiscount,
+                DiscountAmount = discount.ItemDiscount + discount.LevelDiscount,
                 FinalAmount = discount.FinalAmount,
-                PointsUsed = pointsToUse,
-                PointsEarned = discount.PointsEarned,
-                CouponId = couponId,
                 PaymentStatus = "Paid",
                 PaymentMethod = paymentMethod,
                 Notes = notes,
@@ -170,9 +126,20 @@ public class PosService
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
-            // 建立訂單明細
+            // 建立訂單明細（寫入每項商品的折扣）
             foreach (var item in cartItems)
             {
+                // 計算該項目的小計（定價 × 數量 − 折扣）
+                decimal itemSubtotal = item.UnitPrice * item.Quantity;
+                if (item.DiscountType == "Percentage")
+                {
+                    itemSubtotal -= (item.UnitPrice * item.DiscountValue / 100) * item.Quantity;
+                }
+                else if (item.DiscountType == "FixedAmount")
+                {
+                    itemSubtotal -= item.DiscountValue * item.Quantity;
+                }
+
                 var orderItem = new OrderItem
                 {
                     OrderId = order.Id,
@@ -181,9 +148,35 @@ public class PosService
                     ItemName = item.ItemName,
                     UnitPrice = item.UnitPrice,
                     Quantity = item.Quantity,
-                    Subtotal = item.UnitPrice * item.Quantity
+                    DiscountType = item.DiscountType,
+                    DiscountValue = item.DiscountValue,
+                    CouponId = item.CouponId,
+                    Subtotal = Math.Max(0, itemSubtotal)
                 };
                 _db.OrderItems.Add(orderItem);
+
+                // 扣減會員優惠券（不限張數的 coupon 不標記已使用，可重複使用）
+                if (item.CouponId.HasValue && member != null)
+                {
+                    var memberCoupon = await _db.MemberCoupons
+                        .FirstOrDefaultAsync(mc => mc.MemberId == member.Id && mc.CouponId == item.CouponId.Value && mc.UsedAt == null);
+                    if (memberCoupon != null)
+                    {
+                        var coupon = await _db.Coupons.FindAsync(item.CouponId.Value);
+                        if (coupon != null && coupon.TotalQuantity != null)
+                        {
+                            // 限張數 coupon：標記已使用
+                            memberCoupon.UsedAt = DateTime.Now;
+                            memberCoupon.OrderId = order.Id;
+                            coupon.UsedCount++;
+                        }
+                        else if (coupon != null && coupon.TotalQuantity == null)
+                        {
+                            // 不限張數 coupon：僅累積使用次數，不標記已使用
+                            coupon.UsedCount++;
+                        }
+                    }
+                }
 
                 // 庫存扣減（實體商品）
                 if (item.ItemType == "Product")
@@ -197,60 +190,9 @@ public class PosService
                 }
             }
 
-            // 使用優惠券
-            if (couponId.HasValue && member != null)
+            // 更新會員累積消費金額（會員）
+            if (member != null)
             {
-                var memberCoupon = await _db.MemberCoupons
-                    .FirstOrDefaultAsync(mc => mc.MemberId == member.Id && mc.CouponId == couponId.Value && mc.UsedAt == null);
-                if (memberCoupon != null)
-                {
-                    memberCoupon.UsedAt = DateTime.Now;
-                    memberCoupon.OrderId = order.Id;
-                }
-            }
-
-            // 扣除積分
-            if (pointsToUse > 0 && member != null)
-            {
-                var lastTx = await _db.PointTransactions
-                    .Where(pt => pt.MemberId == member.Id)
-                    .OrderByDescending(pt => pt.CreatedAt)
-                    .FirstOrDefaultAsync();
-                var balance = lastTx?.Balance ?? 0;
-
-                var pointTx = new PointTransaction
-                {
-                    MemberId = member.Id,
-                    OrderId = order.Id,
-                    Type = "Redeem",
-                    Points = -pointsToUse,
-                    Balance = balance - pointsToUse,
-                    Description = $"使用積分折抵 {pointsToUse} 點"
-                };
-                _db.PointTransactions.Add(pointTx);
-            }
-
-            // 給予積分（會員）
-            if (member != null && discount.PointsEarned > 0)
-            {
-                var lastTx = await _db.PointTransactions
-                    .Where(pt => pt.MemberId == member.Id)
-                    .OrderByDescending(pt => pt.CreatedAt)
-                    .FirstOrDefaultAsync();
-                var balance = lastTx?.Balance ?? 0;
-
-                var pointTx = new PointTransaction
-                {
-                    MemberId = member.Id,
-                    OrderId = order.Id,
-                    Type = "Earn",
-                    Points = discount.PointsEarned,
-                    Balance = balance + discount.PointsEarned,
-                    Description = $"消費獲得 {discount.PointsEarned} 積分"
-                };
-                _db.PointTransactions.Add(pointTx);
-
-                // 更新會員累積消費金額
                 var dbMember = await _db.Members.FindAsync(member.Id);
                 if (dbMember != null)
                 {
@@ -280,7 +222,7 @@ public class PosService
     /// <summary>
     /// 檢查並升級會員等級
     /// </summary>
-    private async Task CheckAndUpgradeLevelAsync(Member member)
+    public async Task CheckAndUpgradeLevelAsync(Member member)
     {
         // 先取得會員目前等級的 SortOrder
         var currentLevel = await _db.Levels.FirstOrDefaultAsync(l => l.Id == member.LevelId);
@@ -322,7 +264,6 @@ public class PosService
                 TotalAmount = playRecord.Amount,
                 DiscountAmount = 0,
                 FinalAmount = playRecord.Amount,
-                PointsEarned = playRecord.MemberId != null ? (int)playRecord.Amount : 0,
                 PaymentStatus = "Paid",
                 PaymentMethod = paymentMethod,
                 Notes = $"遊玩時段: {playRecord.StartTime:yyyy-MM-dd HH:mm} ~ {playRecord.EndTime:yyyy-MM-dd HH:mm}",
@@ -358,24 +299,6 @@ public class PosService
                     member.TotalPlayHours += playRecord.TotalHours ?? 0;
                     member.TotalSpending += playRecord.Amount;
 
-                    // 給予積分
-                    var lastTx = await _db.PointTransactions
-                        .Where(pt => pt.MemberId == member.Id)
-                        .OrderByDescending(pt => pt.CreatedAt)
-                        .FirstOrDefaultAsync();
-                    var balance = lastTx?.Balance ?? 0;
-
-                    var pointTx = new PointTransaction
-                    {
-                        MemberId = member.Id,
-                        OrderId = order.Id,
-                        Type = "Earn",
-                        Points = (int)playRecord.Amount,
-                        Balance = balance + (int)playRecord.Amount,
-                        Description = $"遊玩獲得 {(int)playRecord.Amount} 積分"
-                    };
-                    _db.PointTransactions.Add(pointTx);
-
                     // 檢查升級
                     await CheckAndUpgradeLevelAsync(member);
                 }
@@ -408,6 +331,11 @@ public class CartItem
     public string ItemName { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; } = 1;
+    // 折扣欄位
+    public string DiscountType { get; set; } = "None"; // None/Percentage/FixedAmount
+    public decimal DiscountValue { get; set; } = 0;
+    // 優惠券Id（用於扣減會員優惠券）
+    public int? CouponId { get; set; }
 }
 
 /// <summary>
@@ -416,11 +344,7 @@ public class CartItem
 public class DiscountCalculationResult
 {
     public decimal Subtotal { get; set; }
-    public decimal LevelDiscount { get; set; }
-    public decimal CouponDiscount { get; set; }
-    public int PointsDiscount { get; set; }
+    public decimal ItemDiscount { get; set; } // 每項商品折扣
+    public decimal LevelDiscount { get; set; } // 會員等級折扣
     public decimal FinalAmount { get; set; }
-    public Coupon? AppliedCoupon { get; set; }
-    public int PointsToUse { get; set; }
-    public int PointsEarned { get; set; }
 }

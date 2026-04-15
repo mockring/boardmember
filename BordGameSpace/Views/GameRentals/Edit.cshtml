@@ -1,0 +1,61 @@
+@model BordGameSpace.Models.GameRental
+@{
+    ViewData["Title"] = "編輯遊戲租借";
+    Layout = "_AdminLayout";
+}
+
+<h2 class="mb-4">🎲 編輯遊戲租借</h2>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-body">
+        <dl class="row mb-3">
+            <dt class="col-sm-4">會員</dt>
+            <dd class="col-sm-8">@Model.Member?.Name（@Model.Member?.Phone）</dd>
+            <dt class="col-sm-4">遊戲</dt>
+            <dd class="col-sm-8">@Model.Product?.Name</dd>
+            <dt class="col-sm-4">借出日期</dt>
+            <dd class="col-sm-8">@Model.BorrowDate.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-4">目前狀態</dt>
+            <dd class="col-sm-8">
+                @if (Model.Status == "Pending") { <span class="badge bg-warning text-dark">審核中</span> }
+                else if (Model.Status == "Approved") { <span class="badge bg-primary">已通過</span> }
+                else if (Model.Status == "Borrowed") { <span class="badge bg-primary">已借出</span> }
+                else if (Model.Status == "Renewed") { <span class="badge bg-info">已續借</span> }
+                else if (Model.Status == "Returned") { <span class="badge bg-success">已歸還</span> }
+                else if (Model.Status == "Overdue") { <span class="badge bg-danger">已逾期</span> }
+                else if (Model.Status == "Rejected") { <span class="badge bg-secondary">已拒絕</span> }
+            </dd>
+        </dl>
+
+        <form method="post">
+            <input type="hidden" name="Id" value="@Model.Id" />
+            <div class="mb-3">
+                <label class="form-label">應還日期</label>
+                <input type="date" name="DueDate" class="form-control" value="@Model.DueDate.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">押金（元）</label>
+                <input type="number" name="Deposit" class="form-control" value="@Model.Deposit" min="0" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">狀態</label>
+                <select name="Status" class="form-select">
+                    <option value="Pending" selected="@(Model.Status=="Pending")">審核中</option>
+                    <option value="Approved" selected="@(Model.Status=="Approved")">已通過</option>
+                    <option value="Borrowed" selected="@(Model.Status=="Borrowed")">已借出</option>
+                    <option value="Renewed" selected="@(Model.Status=="Renewed")">已續借</option>
+                    <option value="Returned" selected="@(Model.Status=="Returned")">已歸還</option>
+                    <option value="Rejected" selected="@(Model.Status=="Rejected")">已拒絕</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">租金（元）</label>
+                <input type="number" name="RentalFee" class="form-control" value="@Model.RentalFee" min="0" step="100" />
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">💾 儲存</button>
+                <a asp-action="AdminIndex" class="btn btn-outline-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>

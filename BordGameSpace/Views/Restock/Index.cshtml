@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "進貨記錄";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>📦 進貨記錄</h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Import" class="btn btn-outline-secondary">匯入</a>
+        <a asp-action="Create" class="btn btn-primary">+ 新增進貨</a>
+    </div>
+</div>
+
+<!-- 篩選 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3" method="get">
+            <div class="col-md-4">
+                <label class="form-label">篩選商品</label>
+                <select name="productId" class="form-select">
+                    <option value="">全部商品</option>
+                    @foreach (var p in (List<BordGameSpace.Models.Product>)ViewBag.Products)
+                    {
+                        <option value="@p.Id" selected="@(p.Id == ViewBag.SelectedProductId)">@p.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">篩選</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">清除</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mb-4">@TempData["ErrorMessage"]</div>
+}
+
+@{ var records = (List<BordGameSpace.Models.RestockRecord>)ViewBag.Records; }
+@if (!records.Any())
+{
+    <div class="alert alert-info mb-4">尚無進貨記錄</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>進貨日期</th>
+                        <th>商品名稱</th>
+                        <th>數量</th>
+                        <th>供應商</th>
+                        <th>聯絡電話</th>
+                        <th>備註</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in records)
+                    {
+                        <tr>
+                            <td>@r.CreatedAt.ToString("yyyy-MM-dd")</td>
+                            <td>@r.Product?.Name</td>
+                            <td class="text-success fw-bold">+@r.Quantity</td>
+                            <td>@(r.Supplier ?? "-")</td>
+                            <td>@(r.Phone ?? "-")</td>
+                            <td>@(r.Notes ?? "-")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

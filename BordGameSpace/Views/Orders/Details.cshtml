@@ -1,0 +1,190 @@
+@model BordGameSpace.Models.Order
+@{
+    ViewData["Title"] = $"訂單 #{Model.Id} 詳情";
+    Layout = "_AdminLayout";
+
+    var orderTypeLabels = new Dictionary<string, string>
+    {
+        { "Product", "商品購買" },
+        { "Play", "現場遊玩" },
+        { "Space", "空間租借" },
+        { "GameRental", "遊戲租借" }
+    };
+    var typeLabel = orderTypeLabels.GetValueOrDefault(Model.OrderType, Model.OrderType);
+}
+
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-outline-secondary">← 返回列表</a>
+</div>
+
+<h2 class="mb-3">🧾 訂單 #@Model.Id 詳情</h2>
+
+@* 基本資訊 *@
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header fw-bold">📋 基本資訊</div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" style="width:120px;">訂單編號</td>
+                        <td><strong>#@Model.Id</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">訂單類型</td>
+                        <td><span class="badge bg-info">@typeLabel</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">建立時間</td>
+                        <td>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">付款方式</td>
+                        <td>@(string.IsNullOrEmpty(Model.PaymentMethod) ? "-" : Model.PaymentMethod)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">付款狀態</td>
+                        <td>
+                            @if (Model.PaymentStatus == "Paid")
+                            {
+                                <span class="badge bg-success">已付款</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">未付款</span>
+                            }
+                        </td>
+                    </tr>
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <tr>
+                            <td class="text-muted">備註</td>
+                            <td>@Model.Notes</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header fw-bold">👤 消費者資訊</div>
+            <div class="card-body">
+                @if (Model.Member != null)
+                {
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted" style="width:120px;">會員</td>
+                            <td><strong>@Model.Member.Name</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">會員等級</td>
+                            <td><span class="badge bg-primary">@Model.Member.Level?.Name</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">電話</td>
+                            <td>@Model.Member.Phone</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Email</td>
+                            <td>@Model.Member.Email</td>
+                        </tr>
+                    </table>
+                }
+                else
+                {
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted" style="width:120px;">消費者</td>
+                            <td>@(string.IsNullOrEmpty(Model.MemberName) ? "非會員" : Model.MemberName)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">電話</td>
+                            <td>@(string.IsNullOrEmpty(Model.MemberPhone) ? "-" : Model.MemberPhone)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">備註</td>
+                            <td><span class="text-muted">非會員消費</span></td>
+                        </tr>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* 金額明細 *@
+<div class="card mt-3">
+    <div class="card-header fw-bold">💰 金額明細</div>
+    <div class="card-body">
+        <div class="row text-end">
+            <div class="col-md-8">
+                <table class="table table-borderless mb-0 ms-auto" style="max-width:400px;">
+                    <tr>
+                        <td>原價合計</td>
+                        <td class="text-end">@Model.TotalAmount.ToString("C0")</td>
+                    </tr>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <tr class="text-danger">
+                            <td>折扣金額</td>
+                            <td class="text-end">- @Model.DiscountAmount.ToString("C0")</td>
+                        </tr>
+                    }
+                    @if (Model.CouponId.HasValue)
+                    {
+                        <tr>
+                            <td>使用優惠券</td>
+                            <td class="text-end">
+                                @(Model.Coupon != null ? Model.Coupon.Name : $"#{Model.CouponId}")
+                            </td>
+                        </tr>
+                    }
+                    <tr class="border-top fw-bold fs-5">
+                        <td>實收金額</td>
+                        <td class="text-end text-success">@Model.FinalAmount.ToString("C0")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* 訂單明細 *@
+@if (Model.OrderItems != null && Model.OrderItems.Any())
+{
+    <div class="card mt-3">
+        <div class="card-header fw-bold">🛒 訂單明細</div>
+        <div class="card-body">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>單價</th>
+                        <th>數量</th>
+                        <th class="text-end">小計</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>@item.ItemName</td>
+                            <td>@item.UnitPrice.ToString("C0")</td>
+                            <td>@item.Quantity</td>
+                            <td class="text-end">@item.Subtotal.ToString("C0")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold">
+                        <td colspan="3" class="text-end">合計</td>
+                        <td class="text-end">@Model.OrderItems.Sum(i => i.Subtotal).ToString("C0")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+}
+

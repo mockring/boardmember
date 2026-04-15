@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "新增進貨記錄";
+    Layout = "_AdminLayout";
+}
+
+<h2 class="mb-4">📦 新增進貨記錄</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label class="form-label">商品 <span class="text-danger">*</span></label>
+        <select name="productId" class="form-select" required>
+            <option value="">請選擇...</option>
+            @foreach (var p in (List<BordGameSpace.Models.Product>)ViewBag.Products)
+            {
+                <option value="@p.Id">@p.Name（目前庫存：@(p.Stock ?? 0)）</option>
+            }
+        </select>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">進貨數量 <span class="text-danger">*</span></label>
+            <input type="number" name="quantity" class="form-control" required min="1" value="1" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">供應商名稱</label>
+            <input type="text" name="supplier" class="form-control" placeholder="選填" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">供應商電話</label>
+            <input type="text" name="supplierPhone" class="form-control" placeholder="選填" />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">備註</label>
+        <textarea name="notes" class="form-control" rows="2" placeholder="選填"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">儲存進貨</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">返回列表</a>
+    </div>
+</form>

@@ -4,20 +4,38 @@ using BordGameSpace.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 設定時區為台北 (UTC+8)
+try
+{
+    var taiwanZone = TimeZoneInfo.FindSystemTimeZoneById("Taipei Standard Time")
+                  ?? TimeZoneInfo.FindSystemTimeZoneById("Asia/Taipei")
+                  ?? TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
+    TimeZoneInfo.ClearCachedData();
+    TimeZoneInfo localZone = TimeZoneInfo.Local;
+    // 將本機時區設為台北（確保所有 DateTime.Now 為台灣時間）
+    // 注意：這只是讓 .NET 取用本機時間時是正確的，伺服器本身的 tzdata 必須正確
+    Console.WriteLine($"[TimeZone] Current: {localZone.DisplayName}, Taiwan: {taiwanZone?.DisplayName}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[TimeZone] 設定失敗: {ex.Message}");
+}
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure SQLite
+// Configure PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Data Source=BordGameSpace.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services
 builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<PosService>();
 builder.Services.AddScoped<CouponService>();
-builder.Services.AddScoped<PointsService>();
+builder.Services.AddScoped<SpaceReservationService>();
+builder.Services.AddScoped<GameRentalService>();
+builder.Services.AddScoped<ReportService>();
 
 // Configure Session
 builder.Services.AddDistributedMemoryCache();
@@ -45,7 +63,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

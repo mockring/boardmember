@@ -43,13 +43,15 @@ public class CouponService
         if (string.IsNullOrWhiteSpace(model.Name))
             return (false, "優惠券名稱為必填", null);
 
-        if (model.TotalQuantity <= 0)
-            return (false, "發行數量需大於 0", null);
-
         if (model.DiscountValue <= 0)
             return (false, "折扣值需大於 0", null);
 
-        if (model.ValidFrom >= model.ValidUntil)
+        // 0 = 已用完（需留空才是不限張數）
+        if (model.TotalQuantity == 0)
+            return (false, "發行數量 0 表示已用完，請修改或留空為不限張數", null);
+
+        // 不限時間（ValidUntil=null）時不檢查截止日期
+        if (model.ValidUntil != null && model.ValidFrom >= model.ValidUntil)
             return (false, "開始日期需早於截止日期", null);
 
         model.CreatedAt = DateTime.Now;
@@ -59,7 +61,7 @@ public class CouponService
         _db.Coupons.Add(model);
         await _db.SaveChangesAsync();
 
-        _logger.LogInformation("新增優惠券: {Name}, 數量: {Qty}", model.Name, model.TotalQuantity);
+        _logger.LogInformation("新增優惠券: {Name}, 數量: {Qty}", model.Name, model.TotalQuantity?.ToString() ?? "不限");
         return (true, "新增成功", model);
     }
 
@@ -75,7 +77,8 @@ public class CouponService
         if (string.IsNullOrWhiteSpace(model.Name))
             return (false, "優惠券名稱為必填");
 
-        if (model.ValidFrom >= model.ValidUntil)
+        // 不限時間時不檢查截止日期
+        if (model.ValidUntil != null && model.ValidFrom >= model.ValidUntil)
             return (false, "開始日期需早於截止日期");
 
         existing.Name = model.Name;
@@ -85,6 +88,7 @@ public class CouponService
         existing.ApplicableTo = model.ApplicableTo;
         existing.ValidFrom = model.ValidFrom;
         existing.ValidUntil = model.ValidUntil;
+        existing.TotalQuantity = model.TotalQuantity;
         existing.IsActive = model.IsActive;
 
         await _db.SaveChangesAsync();
@@ -135,12 +139,12 @@ public class CouponService
             return (false, "此優惠券已停用");
 
         var now = DateTime.Now;
-        if (now > coupon.ValidUntil || now < coupon.ValidFrom)
+        if (coupon.ValidUntil != null && (now > coupon.ValidUntil || now < coupon.ValidFrom))
             return (false, "此優惠券已過期或尚未生效");
 
         // 檢查發行數量
         var issuedCount = await _db.MemberCoupons.CountAsync(mc => mc.CouponId == couponId);
-        if (issuedCount >= coupon.TotalQuantity)
+        if (coupon.TotalQuantity != null && issuedCount >= coupon.TotalQuantity)
             return (false, "此優惠券已全數發放完畢");
 
         // 檢查會員是否已有此優惠券（未使用）
@@ -176,7 +180,7 @@ public class CouponService
             return (false, "此優惠券已停用", 0);
 
         var now = DateTime.Now;
-        if (now > coupon.ValidUntil || now < coupon.ValidFrom)
+        if (coupon.ValidUntil != null && (now > coupon.ValidUntil || now < coupon.ValidFrom))
             return (false, "此優惠券已過期或尚未生效", 0);
 
         // 找出所有啟用的會員

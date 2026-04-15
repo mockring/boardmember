@@ -12,13 +12,7 @@
                 <span class="badge bg-primary">@Model.Level?.Name</span>
             </div>
         </div>
-        <div class="list-group">
-            <a asp-action="Profile" class="list-group-item list-group-item-action active">我的資料</a>
-            <a asp-action="Orders" class="list-group-item list-group-item-action">我的訂單</a>
-            <a asp-action="Coupons" class="list-group-item list-group-item-action">我的優惠券</a>
-            <a asp-action="Points" class="list-group-item list-group-item-action">我的積分</a>
-            <a asp-action="ChangePassword" class="list-group-item list-group-item-action">修改密碼</a>
-        </div>
+        <partial name="_MemberNav" />
     </div>
 
     <div class="col-md-9">

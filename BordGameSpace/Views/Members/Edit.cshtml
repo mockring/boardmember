@@ -1,4 +1,4 @@
-@model BordGameSpace.Models.Member
+@model BordGameSpace.DTOs.EditMemberDto
 @{
     ViewData["Title"] = "編輯會員";
     Layout = "_AdminLayout";
@@ -11,7 +11,7 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="post" asp-action="Edit">
+        <form method="post" asp-controller="Members" asp-action="Edit">
             @Html.AntiForgeryToken()
             <input type="hidden" name="Id" value="@Model.Id" />
 

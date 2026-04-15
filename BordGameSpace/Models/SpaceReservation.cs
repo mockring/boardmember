@@ -8,7 +8,7 @@ public class SpaceReservation
     [Key]
     public int Id { get; set; }
 
-    public int MemberId { get; set; }
+    public int? MemberId { get; set; }
 
     [Required]
     [MaxLength(100)]
@@ -24,13 +24,18 @@ public class SpaceReservation
 
     public TimeSpan EndTime { get; set; }
 
-    public int Hours { get; set; } = 0;
+    public int PeopleCount { get; set; } = 2;
+
+    [MaxLength(20)]
+    public string SpaceType { get; set; } = "訂位";
+
+    public int? Hours { get; set; } = 0;
 
     [Column(TypeName = "decimal(10,0)")]
-    public decimal HourlyRate { get; set; } = 0;
+    public decimal? HourlyRate { get; set; } = 0;
 
     [Column(TypeName = "decimal(10,0)")]
-    public decimal TotalAmount { get; set; } = 0;
+    public decimal? TotalAmount { get; set; } = 0;
 
     [MaxLength(50)]
     public string Status { get; set; } = "Pending"; // Pending/Approved/Rejected/Cancelled
@@ -43,6 +48,6 @@ public class SpaceReservation
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     // Navigation
-    public Member Member { get; set; } = null!;
+    public Member? Member { get; set; } = null!;
     public Order? Order { get; set; }
 }
