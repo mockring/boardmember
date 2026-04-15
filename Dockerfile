@@ -8,7 +8,7 @@ RUN dotnet restore ./BordGameSpace/BordGameSpace.csproj
 
 # Copy all source files and build
 COPY BordGameSpace/ ./BordGameSpace/
-RUN dotnet publish ./BordGameSpace/BordGameSpace.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish ./BordGameSpace/BordGameSpace.csproj -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
