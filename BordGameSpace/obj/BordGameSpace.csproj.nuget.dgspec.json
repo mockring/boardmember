@@ -14,6 +14,7 @@
         "outputPath": "/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
+          "/home/user/.openclaw/workspace-coding/boardmember/nuget.config",
           "/home/user/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [

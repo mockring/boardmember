@@ -54,6 +54,110 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    // Seed Levels
+    if (!db.Levels.Any())
+    {
+        db.Levels.AddRange(
+            new BordGameSpace.Models.Level
+            {
+                Name = "非會員",
+                UpgradeThresholdHours = 0,
+                UpgradeThresholdAmount = 0,
+                GameDiscount = 1.00m,
+                WeekdayHourlyRate = 60,
+                HolidayHourlyRate = 70,
+                SortOrder = 0,
+                IsDefault = true,
+                IsDeletable = false,
+                CreatedAt = new DateTime(2024, 1, 1)
+            },
+            new BordGameSpace.Models.Level
+            {
+                Name = "會員",
+                UpgradeThresholdHours = 1000,
+                UpgradeThresholdAmount = 100000,
+                GameDiscount = 0.90m,
+                WeekdayHourlyRate = 50,
+                HolidayHourlyRate = 60,
+                SortOrder = 1,
+                IsDefault = false,
+                IsDeletable = true,
+                CreatedAt = new DateTime(2024, 1, 1)
+            }
+        );
+    }
+
+    // Seed Admin
+    if (!db.Admins.Any())
+    {
+        db.Admins.Add(new BordGameSpace.Models.Admin
+        {
+            Username = "admin",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123", 12),
+            Name = "系統管理者",
+            Role = "Owner",
+            IsActive = true,
+            CreatedAt = DateTime.Now
+        });
+    }
+
+    // Seed Coupons
+    if (!db.Coupons.Any())
+    {
+        db.Coupons.AddRange(
+            new BordGameSpace.Models.Coupon
+            {
+                Name = "會員:購買桌遊9折",
+                CouponType = "Percentage",
+                DiscountValue = 10,
+                MinPurchase = 0,
+                ApplicableTo = "Product",
+                TotalQuantity = null,
+                UsedCount = 0,
+                ValidFrom = new DateTime(2026, 1, 1),
+                ValidUntil = null,
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1)
+            },
+            new BordGameSpace.Models.Coupon
+            {
+                Name = "生日禮:生日當月3人同行壽星免場地費",
+                CouponType = "Percentage",
+                DiscountValue = 100,
+                MinPurchase = 0,
+                ApplicableTo = "Play",
+                TotalQuantity = null,
+                UsedCount = 0,
+                ValidFrom = new DateTime(2026, 1, 1),
+                ValidUntil = null,
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1)
+            }
+        );
+    }
+
+    // Seed Products
+    if (!db.Products.Any())
+    {
+        db.Products.Add(new BordGameSpace.Models.Product
+        {
+            Category = "服務",
+            Name = "會員申請",
+            Description = null,
+            Price = 200,
+            Stock = null,
+            LowStockAlert = 0,
+            ImageUrl = null,
+            IsActive = true,
+            IsService = true,
+            CreatedAt = new DateTime(2026, 1, 1),
+            UpdatedAt = new DateTime(2026, 1, 1)
+        });
+    }
+
+    try { db.SaveChanges(); }
+    catch (Exception ex) { Console.WriteLine($"[Seed] 錯誤: {ex.Message}"); }
 }
 
 // Configure the HTTP request pipeline.

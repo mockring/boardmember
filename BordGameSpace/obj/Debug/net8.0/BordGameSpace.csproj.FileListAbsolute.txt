@@ -116,3 +116,4 @@
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/ref/BordGameSpace.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Npgsql.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.sourcelink.json
