@@ -24,9 +24,16 @@ catch (Exception ex)
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure PostgreSQL
+// Configure PostgreSQL with connection resilience
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseNpgsql(connStr, npgsql =>
+    {
+        npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
+        npgsql.CommandTimeout(30);
+    });
+});
 
 // Register services
 builder.Services.AddScoped<MemberService>();

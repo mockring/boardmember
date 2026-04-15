@@ -126,4 +126,59 @@ public class AdminController : BaseController
         HttpContext.Session.Remove(ADMIN_SESSION_KEY);
         return RedirectToAction("Login", "Admin");
     }
+
+    /// <summary>
+    /// 修改密碼頁面
+    /// </summary>
+    public IActionResult ChangePassword()
+    {
+        if (!IsAdminLoggedIn)
+            return RedirectToAction("Login", "Admin");
+        return View();
+    }
+
+    /// <summary>
+    /// 處理修改密碼
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto model)
+    {
+        if (!IsAdminLoggedIn)
+            return RedirectToAction("Login", "Admin");
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        if (model.NewPassword != model.ConfirmPassword)
+        {
+            ModelState.AddModelError("", "新密碼與確認密碼不符");
+            return View(model);
+        }
+
+        if (model.NewPassword.Length < 6)
+        {
+            ModelState.AddModelError("", "新密碼至少需要 6 個字元");
+            return View(model);
+        }
+
+        var adminId = HttpContext.Session.GetInt32(ADMIN_SESSION_KEY);
+        var admin = await _db.Admins.FindAsync(adminId);
+        if (admin == null)
+        {
+            return RedirectToAction("Login", "Admin");
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(model.CurrentPassword, admin.PasswordHash))
+        {
+            ModelState.AddModelError("", "目前密碼輸入錯誤");
+            return View(model);
+        }
+
+        admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword, 12);
+        await _db.SaveChangesAsync();
+
+        ViewData["Success"] = true;
+        return View(model);
+    }
 }
