@@ -31,7 +31,8 @@ public class AdminController : BaseController
 
         // 今日統計（使用台灣時區）
         var taiwanNow = TaiwanNow;
-        var todayStart = taiwanNow.Date;
+        // PostgreSQL timestamptz 必須是 UTC，否則會報錯
+        var todayStart = DateTime.SpecifyKind(taiwanNow.Date, DateTimeKind.Utc);
         var todayOrders = await _db.Orders
             .Where(o => o.CreatedAt >= todayStart && o.PaymentStatus == "Paid")
             .ToListAsync();
@@ -60,7 +61,7 @@ public class AdminController : BaseController
 
         // 已預訂的空間預約
         var today = taiwanNow.Date;
-        var upcomingReservations = await _db.SpaceReservations.Where(r => r.ReservationDate >= today && (r.Status == "Approved" || r.Status == "Pending")).ToListAsync();
+        var upcomingReservations = await _db.SpaceReservations.Where(r => r.ReservationDate >= today.Date && (r.Status == "Approved" || r.Status == "Pending")).ToListAsync();
         ViewBag.UpcomingReservations = upcomingReservations;
         ViewBag.UpcomingReservationCount = upcomingReservations.Count;
         ViewBag.ActiveReservations = upcomingReservations;
@@ -69,7 +70,7 @@ public class AdminController : BaseController
         // 報名中的活動
         var openEvents = await _db.Events
             .Include(e => e.Registrations)
-            .Where(e => e.Status == "RegistrationOpen" && e.EventDate >= today)
+            .Where(e => e.Status == "RegistrationOpen" && e.EventDate >= DateTime.SpecifyKind(taiwanNow, DateTimeKind.Utc))
             .OrderBy(e => e.EventDate)
             .ToListAsync();
         ViewBag.OpenEvents = openEvents;
