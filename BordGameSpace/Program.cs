@@ -56,12 +56,12 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Ensure database is created and seeded
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     // 使用 raw SQL 建立所有資料表（繞過 pgBouncer Transaction Mode 對 EnsureCreated 的限制）
+    // 順序嚴格按照 FK 依賴關係：被參照的表先建
     var createTablesSql = @"
         CREATE TABLE IF NOT EXISTS ""Levels"" (
             ""Id"" SERIAL PRIMARY KEY,
@@ -87,6 +87,49 @@ using (var scope = app.Services.CreateScope())
             ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
 
+        CREATE TABLE IF NOT EXISTS ""Products"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Category"" VARCHAR(50) NOT NULL,
+            ""Name"" VARCHAR(200) NOT NULL,
+            ""Description"" VARCHAR(1000) NULL,
+            ""Price"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Stock"" INT NULL,
+            ""LowStockAlert"" INT NOT NULL DEFAULT 1,
+            ""ImageUrl"" VARCHAR(500) NULL,
+            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""IsService"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Coupons"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""CouponType"" VARCHAR(50) NOT NULL,
+            ""DiscountValue"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""MinPurchase"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""ApplicableTo"" VARCHAR(50) NOT NULL DEFAULT 'All',
+            ""TotalQuantity"" INT NULL,
+            ""UsedCount"" INT NOT NULL DEFAULT 0,
+            ""ValidFrom"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""ValidUntil"" TIMESTAMPTZ NULL,
+            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Events"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Title"" VARCHAR(200) NOT NULL,
+            ""Content"" TEXT NOT NULL,
+            ""ImageUrl"" VARCHAR(500) NULL,
+            ""EventDate"" TIMESTAMPTZ NULL,
+            ""MaxParticipants"" INT NULL,
+            ""RegistrationDeadline"" TIMESTAMPTZ NULL,
+            ""Status"" VARCHAR(50) NOT NULL DEFAULT 'RegistrationOpen',
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
         CREATE TABLE IF NOT EXISTS ""Members"" (
             ""Id"" SERIAL PRIMARY KEY,
             ""Name"" VARCHAR(100) NOT NULL,
@@ -103,19 +146,24 @@ using (var scope = app.Services.CreateScope())
             FOREIGN KEY (""LevelId"") REFERENCES ""Levels""(""Id"")
         );
 
-        CREATE TABLE IF NOT EXISTS ""Products"" (
+        CREATE TABLE IF NOT EXISTS ""EventRegistrations"" (
             ""Id"" SERIAL PRIMARY KEY,
-            ""Category"" VARCHAR(50) NOT NULL,
-            ""Name"" VARCHAR(200) NOT NULL,
-            ""Description"" VARCHAR(1000) NULL,
-            ""Price"" DECIMAL(10,0) NOT NULL DEFAULT 0,
-            ""Stock"" INT NULL,
-            ""LowStockAlert"" INT NOT NULL DEFAULT 1,
-            ""ImageUrl"" VARCHAR(500) NULL,
-            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
-            ""IsService"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""EventId"" INT NOT NULL,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""Phone"" VARCHAR(20) NOT NULL,
             ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            FOREIGN KEY (""EventId"") REFERENCES ""Events""(""Id"") ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS ""RestockRecords"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""ProductId"" INT NOT NULL,
+            ""Quantity"" INT NOT NULL DEFAULT 0,
+            ""Supplier"" VARCHAR(200) NULL,
+            ""Phone"" VARCHAR(20) NULL,
+            ""Notes"" VARCHAR(500) NULL,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""ProductId"") REFERENCES ""Products""(""Id"") ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS ""Orders"" (
@@ -136,44 +184,6 @@ using (var scope = app.Services.CreateScope())
             ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL,
             FOREIGN KEY (""CouponId"") REFERENCES ""Coupons""(""Id"") ON DELETE SET NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS ""OrderItems"" (
-            ""Id"" SERIAL PRIMARY KEY,
-            ""OrderId"" INT NOT NULL,
-            ""ItemType"" VARCHAR(50) NOT NULL,
-            ""ItemId"" INT NOT NULL,
-            ""ItemName"" VARCHAR(200) NOT NULL,
-            ""UnitPrice"" DECIMAL(10,0) NOT NULL DEFAULT 0,
-            ""Quantity"" INT NOT NULL DEFAULT 1,
-            ""Subtotal"" DECIMAL(10,0) NOT NULL DEFAULT 0,
-            FOREIGN KEY (""OrderId"") REFERENCES ""Orders""(""Id"") ON DELETE CASCADE
-        );
-
-        CREATE TABLE IF NOT EXISTS ""Coupons"" (
-            ""Id"" SERIAL PRIMARY KEY,
-            ""Name"" VARCHAR(100) NOT NULL,
-            ""CouponType"" VARCHAR(50) NOT NULL,
-            ""DiscountValue"" DECIMAL(10,0) NOT NULL DEFAULT 0,
-            ""MinPurchase"" DECIMAL(10,0) NOT NULL DEFAULT 0,
-            ""ApplicableTo"" VARCHAR(50) NOT NULL DEFAULT 'All',
-            ""TotalQuantity"" INT NULL,
-            ""UsedCount"" INT NOT NULL DEFAULT 0,
-            ""ValidFrom"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            ""ValidUntil"" TIMESTAMPTZ NULL,
-            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
-            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS ""MemberCoupons"" (
-            ""Id"" SERIAL PRIMARY KEY,
-            ""MemberId"" INT NOT NULL,
-            ""CouponId"" INT NOT NULL,
-            ""ReceivedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            ""UsedAt"" TIMESTAMPTZ NULL,
-            ""OrderId"" INT NULL,
-            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE CASCADE,
-            FOREIGN KEY (""CouponId"") REFERENCES ""Coupons""(""Id"") ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS ""PlayRecords"" (
@@ -229,37 +239,27 @@ using (var scope = app.Services.CreateScope())
             FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL
         );
 
-        CREATE TABLE IF NOT EXISTS ""Events"" (
+        CREATE TABLE IF NOT EXISTS ""OrderItems"" (
             ""Id"" SERIAL PRIMARY KEY,
-            ""Title"" VARCHAR(200) NOT NULL,
-            ""Content"" TEXT NOT NULL,
-            ""ImageUrl"" VARCHAR(500) NULL,
-            ""EventDate"" TIMESTAMPTZ NULL,
-            ""MaxParticipants"" INT NULL,
-            ""RegistrationDeadline"" TIMESTAMPTZ NULL,
-            ""Status"" VARCHAR(50) NOT NULL DEFAULT 'RegistrationOpen',
-            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            ""OrderId"" INT NOT NULL,
+            ""ItemType"" VARCHAR(50) NOT NULL,
+            ""ItemId"" INT NOT NULL,
+            ""ItemName"" VARCHAR(200) NOT NULL,
+            ""UnitPrice"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Quantity"" INT NOT NULL DEFAULT 1,
+            ""Subtotal"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            FOREIGN KEY (""OrderId"") REFERENCES ""Orders""(""Id"") ON DELETE CASCADE
         );
 
-        CREATE TABLE IF NOT EXISTS ""EventRegistrations"" (
+        CREATE TABLE IF NOT EXISTS ""MemberCoupons"" (
             ""Id"" SERIAL PRIMARY KEY,
-            ""EventId"" INT NOT NULL,
-            ""Name"" VARCHAR(100) NOT NULL,
-            ""Phone"" VARCHAR(20) NOT NULL,
-            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (""EventId"") REFERENCES ""Events""(""Id"") ON DELETE CASCADE
-        );
-
-        CREATE TABLE IF NOT EXISTS ""RestockRecords"" (
-            ""Id"" SERIAL PRIMARY KEY,
-            ""ProductId"" INT NOT NULL,
-            ""Quantity"" INT NOT NULL DEFAULT 0,
-            ""Supplier"" VARCHAR(200) NULL,
-            ""Phone"" VARCHAR(20) NULL,
-            ""Notes"" VARCHAR(500) NULL,
-            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (""ProductId"") REFERENCES ""Products""(""Id"") ON DELETE CASCADE
+            ""MemberId"" INT NOT NULL,
+            ""CouponId"" INT NOT NULL,
+            ""ReceivedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UsedAt"" TIMESTAMPTZ NULL,
+            ""OrderId"" INT NULL,
+            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE CASCADE,
+            FOREIGN KEY (""CouponId"") REFERENCES ""Coupons""(""Id"") ON DELETE CASCADE
         );
     ";
 
