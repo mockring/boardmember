@@ -273,108 +273,34 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"[DB] 資料表建立失敗: {ex.Message}");
     }
 
-    // Seed Levels
-    if (!db.Levels.Any())
-    {
-        db.Levels.AddRange(
-            new BordGameSpace.Models.Level
-            {
-                Name = "非會員",
-                UpgradeThresholdHours = 0,
-                UpgradeThresholdAmount = 0,
-                GameDiscount = 1.00m,
-                WeekdayHourlyRate = 60,
-                HolidayHourlyRate = 70,
-                SortOrder = 0,
-                IsDefault = true,
-                IsDeletable = false,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-            new BordGameSpace.Models.Level
-            {
-                Name = "會員",
-                UpgradeThresholdHours = 1000,
-                UpgradeThresholdAmount = 100000,
-                GameDiscount = 0.90m,
-                WeekdayHourlyRate = 50,
-                HolidayHourlyRate = 60,
-                SortOrder = 1,
-                IsDefault = false,
-                IsDeletable = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            }
-        );
-    }
+    // 使用 raw SQL 執行 Seed Data（繞過 EF Core decimal 型別對應問題）
+    var seedSql = @"
+        INSERT INTO ""Levels"" (""Name"", ""UpgradeThresholdHours"", ""UpgradeThresholdAmount"", ""GameDiscount"", ""WeekdayHourlyRate"", ""HolidayHourlyRate"", ""SortOrder"", ""IsDefault"", ""IsDeletable"", ""CreatedAt"")
+        VALUES ('非會員', 0, 0, 1.00, 60, 70, 0, TRUE, FALSE, NOW())
+        ON CONFLICT DO NOTHING;
 
-    // Seed Admin
-    if (!db.Admins.Any())
-    {
-        db.Admins.Add(new BordGameSpace.Models.Admin
-        {
-            Username = "admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123", 12),
-            Name = "系統管理者",
-            Role = "Owner",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        });
-    }
+        INSERT INTO ""Levels"" (""Name"", ""UpgradeThresholdHours"", ""UpgradeThresholdAmount"", ""GameDiscount"", ""WeekdayHourlyRate"", ""HolidayHourlyRate"", ""SortOrder"", ""IsDefault"", ""IsDeletable"", ""CreatedAt"")
+        VALUES ('會員', 1000, 100000, 0.90, 50, 60, 1, FALSE, TRUE, NOW())
+        ON CONFLICT DO NOTHING;
 
-    // Seed Coupons
-    if (!db.Coupons.Any())
-    {
-        db.Coupons.AddRange(
-            new BordGameSpace.Models.Coupon
-            {
-                Name = "會員:購買桌遊9折",
-                CouponType = "Percentage",
-                DiscountValue = 10,
-                MinPurchase = 0,
-                ApplicableTo = "Product",
-                TotalQuantity = null,
-                UsedCount = 0,
-                ValidFrom = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                ValidUntil = null,
-                IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-            new BordGameSpace.Models.Coupon
-            {
-                Name = "生日禮:生日當月3人同行壽星免場地費",
-                CouponType = "Percentage",
-                DiscountValue = 100,
-                MinPurchase = 0,
-                ApplicableTo = "Play",
-                TotalQuantity = null,
-                UsedCount = 0,
-                ValidFrom = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                ValidUntil = null,
-                IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            }
-        );
-    }
+        INSERT INTO ""Admins"" (""Username"", ""PasswordHash"", ""Name"", ""Role"", ""IsActive"", ""CreatedAt"")
+        VALUES ('admin', '$2a$12$lL3C0cDbC93wc6zNCinDpuoVuHVyOXGC.TjVwJrIgtcuKNVxnZG4O', '系統管理者', 'Owner', TRUE, NOW())
+        ON CONFLICT (""Username"") DO NOTHING;
 
-    // Seed Products
-    if (!db.Products.Any())
-    {
-        db.Products.Add(new BordGameSpace.Models.Product
-        {
-            Category = "服務",
-            Name = "會員申請",
-            Description = null,
-            Price = 200,
-            Stock = null,
-            LowStockAlert = 0,
-            ImageUrl = null,
-            IsActive = true,
-            IsService = true,
-            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-        });
-    }
+        INSERT INTO ""Coupons"" (""Name"", ""CouponType"", ""DiscountValue"", ""MinPurchase"", ""ApplicableTo"", ""TotalQuantity"", ""UsedCount"", ""ValidFrom"", ""ValidUntil"", ""IsActive"", ""CreatedAt"")
+        VALUES ('會員:購買桌遊9折', 'Percentage', 10, 0, 'Product', NULL, 0, NOW(), NULL, TRUE, NOW())
+        ON CONFLICT DO NOTHING;
 
-    try { db.SaveChanges(); }
+        INSERT INTO ""Coupons"" (""Name"", ""CouponType"", ""DiscountValue"", ""MinPurchase"", ""ApplicableTo"", ""TotalQuantity"", ""UsedCount"", ""ValidFrom"", ""ValidUntil"", ""IsActive"", ""CreatedAt"")
+        VALUES ('生日禮:生日當月3人同行壽星免場地費', 'Percentage', 100, 0, 'Play', NULL, 0, NOW(), NULL, TRUE, NOW())
+        ON CONFLICT DO NOTHING;
+
+        INSERT INTO ""Products"" (""Category"", ""Name"", ""Description"", ""Price"", ""Stock"", ""LowStockAlert"", ""ImageUrl"", ""IsActive"", ""IsService"", ""CreatedAt"", ""UpdatedAt"")
+        VALUES ('服務', '會員申請', NULL, 200, NULL, 0, NULL, TRUE, TRUE, NOW(), NOW())
+        ON CONFLICT DO NOTHING;
+    ";
+
+    try { db.Database.ExecuteSqlRaw(seedSql); Console.WriteLine("[DB] Seed 完成"); }
     catch (Exception ex) { Console.WriteLine($"[Seed] 錯誤: {ex.Message}"); }
 }
 
