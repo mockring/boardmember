@@ -13,6 +13,9 @@ public class AdminService
     {
         _db = db;
         _logger = logger;
+        // Warmup: 提前開啟 DB 連線，避免第一筆查詢逾時
+        try { _db.Database.CanConnectAsync().Wait(TimeSpan.FromSeconds(10)); }
+        catch { }
     }
 
     /// <summary>
