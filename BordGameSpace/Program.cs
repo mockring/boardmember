@@ -12,7 +12,7 @@ try
                   ?? TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
     TimeZoneInfo.ClearCachedData();
     TimeZoneInfo localZone = TimeZoneInfo.Local;
-    // 將本機時區設為台北（確保所有 DateTime.Now 為台灣時間）
+    // 將本機時區設為台北（確保所有 DateTime.UtcNow 為台灣時間）
     // 注意：這只是讓 .NET 取用本機時間時是正確的，伺服器本身的 tzdata 必須正確
     Console.WriteLine($"[TimeZone] Current: {localZone.DisplayName}, Taiwan: {taiwanZone?.DisplayName}");
 }
@@ -61,15 +61,216 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    // 建立資料表（全新資料庫直接用 EnsureCreated 最穩定）
+    // 使用 raw SQL 建立所有資料表（繞過 pgBouncer Transaction Mode 對 EnsureCreated 的限制）
+    var createTablesSql = @"
+        CREATE TABLE IF NOT EXISTS ""Levels"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Name"" VARCHAR(50) NOT NULL,
+            ""UpgradeThresholdHours"" DECIMAL(10,2) NOT NULL DEFAULT 0,
+            ""UpgradeThresholdAmount"" DECIMAL(10,2) NOT NULL DEFAULT 0,
+            ""GameDiscount"" DECIMAL(3,2) NOT NULL DEFAULT 1.00,
+            ""WeekdayHourlyRate"" DECIMAL(10,0) NOT NULL DEFAULT 60,
+            ""HolidayHourlyRate"" DECIMAL(10,0) NOT NULL DEFAULT 70,
+            ""SortOrder"" INT NOT NULL DEFAULT 0,
+            ""IsDefault"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""IsDeletable"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Admins"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Username"" VARCHAR(100) NOT NULL UNIQUE,
+            ""PasswordHash"" VARCHAR(255) NOT NULL,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""Role"" VARCHAR(50) NOT NULL DEFAULT 'Owner',
+            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Members"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""Phone"" VARCHAR(20) NOT NULL UNIQUE,
+            ""Email"" VARCHAR(255) NOT NULL UNIQUE,
+            ""PasswordHash"" VARCHAR(255) NOT NULL,
+            ""Birthday"" TIMESTAMPTZ NULL,
+            ""TotalPlayHours"" DECIMAL(10,2) NOT NULL DEFAULT 0,
+            ""TotalSpending"" DECIMAL(10,2) NOT NULL DEFAULT 0,
+            ""LevelId"" INT NOT NULL DEFAULT 1,
+            ""Status"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""LevelId"") REFERENCES ""Levels""(""Id"")
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Products"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Category"" VARCHAR(50) NOT NULL,
+            ""Name"" VARCHAR(200) NOT NULL,
+            ""Description"" VARCHAR(1000) NULL,
+            ""Price"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Stock"" INT NULL,
+            ""LowStockAlert"" INT NOT NULL DEFAULT 1,
+            ""ImageUrl"" VARCHAR(500) NULL,
+            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""IsService"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Orders"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""OrderType"" VARCHAR(50) NOT NULL,
+            ""MemberId"" INT NULL,
+            ""MemberName"" VARCHAR(100) NULL,
+            ""MemberPhone"" VARCHAR(20) NULL,
+            ""TotalAmount"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""DiscountAmount"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""FinalAmount"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""PointsUsed"" INT NOT NULL DEFAULT 0,
+            ""PointsEarned"" INT NOT NULL DEFAULT 0,
+            ""CouponId"" INT NULL,
+            ""PaymentStatus"" VARCHAR(50) NOT NULL DEFAULT 'Paid',
+            ""PaymentMethod"" VARCHAR(50) NULL,
+            ""Notes"" VARCHAR(500) NULL,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL,
+            FOREIGN KEY (""CouponId"") REFERENCES ""Coupons""(""Id"") ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS ""OrderItems"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""OrderId"" INT NOT NULL,
+            ""ItemType"" VARCHAR(50) NOT NULL,
+            ""ItemId"" INT NOT NULL,
+            ""ItemName"" VARCHAR(200) NOT NULL,
+            ""UnitPrice"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Quantity"" INT NOT NULL DEFAULT 1,
+            ""Subtotal"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            FOREIGN KEY (""OrderId"") REFERENCES ""Orders""(""Id"") ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Coupons"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""CouponType"" VARCHAR(50) NOT NULL,
+            ""DiscountValue"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""MinPurchase"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""ApplicableTo"" VARCHAR(50) NOT NULL DEFAULT 'All',
+            ""TotalQuantity"" INT NULL,
+            ""UsedCount"" INT NOT NULL DEFAULT 0,
+            ""ValidFrom"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""ValidUntil"" TIMESTAMPTZ NULL,
+            ""IsActive"" BOOLEAN NOT NULL DEFAULT TRUE,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""MemberCoupons"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""MemberId"" INT NOT NULL,
+            ""CouponId"" INT NOT NULL,
+            ""ReceivedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UsedAt"" TIMESTAMPTZ NULL,
+            ""OrderId"" INT NULL,
+            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE CASCADE,
+            FOREIGN KEY (""CouponId"") REFERENCES ""Coupons""(""Id"") ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS ""PlayRecords"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""MemberId"" INT NULL,
+            ""MemberName"" VARCHAR(100) NULL,
+            ""MemberPhone"" VARCHAR(20) NULL,
+            ""StartTime"" TIMESTAMPTZ NOT NULL,
+            ""EndTime"" TIMESTAMPTZ NULL,
+            ""TotalHours"" DECIMAL(10,2) NULL,
+            ""HourlyRate"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Amount"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""OrderId"" INT NULL,
+            ""Status"" VARCHAR(50) NOT NULL DEFAULT 'Playing',
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS ""GameRentals"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""MemberId"" INT NULL,
+            ""ProductId"" INT NOT NULL,
+            ""PickupDate"" TIMESTAMPTZ NULL,
+            ""BorrowDate"" TIMESTAMPTZ NULL,
+            ""DueDate"" TIMESTAMPTZ NULL,
+            ""ReturnDate"" TIMESTAMPTZ NULL,
+            ""Deposit"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""RentalFee"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Status"" VARCHAR(50) NOT NULL DEFAULT 'Pending',
+            ""OrderId"" INT NULL,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL,
+            FOREIGN KEY (""ProductId"") REFERENCES ""Products""(""Id"") ON DELETE RESTRICT
+        );
+
+        CREATE TABLE IF NOT EXISTS ""SpaceReservations"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""MemberId"" INT NULL,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""Phone"" VARCHAR(20) NOT NULL,
+            ""ReservationDate"" DATE NOT NULL,
+            ""StartTime"" TIME NOT NULL,
+            ""EndTime"" TIME NOT NULL,
+            ""PeopleCount"" INT NOT NULL DEFAULT 2,
+            ""SpaceType"" VARCHAR(20) NOT NULL DEFAULT '訂位',
+            ""Hours"" INT NOT NULL DEFAULT 1,
+            ""HourlyRate"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""TotalAmount"" DECIMAL(10,0) NOT NULL DEFAULT 0,
+            ""Status"" VARCHAR(50) NOT NULL DEFAULT 'Pending',
+            ""OrderId"" INT NULL,
+            ""Notes"" VARCHAR(500) NULL,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Events"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Title"" VARCHAR(200) NOT NULL,
+            ""Content"" TEXT NOT NULL,
+            ""ImageUrl"" VARCHAR(500) NULL,
+            ""EventDate"" TIMESTAMPTZ NULL,
+            ""MaxParticipants"" INT NULL,
+            ""RegistrationDeadline"" TIMESTAMPTZ NULL,
+            ""Status"" VARCHAR(50) NOT NULL DEFAULT 'RegistrationOpen',
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ""UpdatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS ""EventRegistrations"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""EventId"" INT NOT NULL,
+            ""Name"" VARCHAR(100) NOT NULL,
+            ""Phone"" VARCHAR(20) NOT NULL,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""EventId"") REFERENCES ""Events""(""Id"") ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS ""RestockRecords"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""ProductId"" INT NOT NULL,
+            ""Quantity"" INT NOT NULL DEFAULT 0,
+            ""Supplier"" VARCHAR(200) NULL,
+            ""Phone"" VARCHAR(20) NULL,
+            ""Notes"" VARCHAR(500) NULL,
+            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (""ProductId"") REFERENCES ""Products""(""Id"") ON DELETE CASCADE
+        );
+    ";
+
     try
     {
-        db.Database.EnsureCreated();
-        Console.WriteLine("[DB] 資料表建立完成");
+        db.Database.ExecuteSqlRaw(createTablesSql);
+        Console.WriteLine("[DB] 所有資料表建立完成");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[DB] 建立失敗: {ex.Message}");
+        Console.WriteLine($"[DB] 資料表建立失敗: {ex.Message}");
     }
 
     // Seed Levels
@@ -87,7 +288,7 @@ using (var scope = app.Services.CreateScope())
                 SortOrder = 0,
                 IsDefault = true,
                 IsDeletable = false,
-                CreatedAt = new DateTime(2024, 1, 1)
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new BordGameSpace.Models.Level
             {
@@ -100,7 +301,7 @@ using (var scope = app.Services.CreateScope())
                 SortOrder = 1,
                 IsDefault = false,
                 IsDeletable = true,
-                CreatedAt = new DateTime(2024, 1, 1)
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
     }
@@ -115,7 +316,7 @@ using (var scope = app.Services.CreateScope())
             Name = "系統管理者",
             Role = "Owner",
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         });
     }
 
@@ -132,10 +333,10 @@ using (var scope = app.Services.CreateScope())
                 ApplicableTo = "Product",
                 TotalQuantity = null,
                 UsedCount = 0,
-                ValidFrom = new DateTime(2026, 1, 1),
+                ValidFrom = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 ValidUntil = null,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1)
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new BordGameSpace.Models.Coupon
             {
@@ -146,10 +347,10 @@ using (var scope = app.Services.CreateScope())
                 ApplicableTo = "Play",
                 TotalQuantity = null,
                 UsedCount = 0,
-                ValidFrom = new DateTime(2026, 1, 1),
+                ValidFrom = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 ValidUntil = null,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1)
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
     }
@@ -168,8 +369,8 @@ using (var scope = app.Services.CreateScope())
             ImageUrl = null,
             IsActive = true,
             IsService = true,
-            CreatedAt = new DateTime(2026, 1, 1),
-            UpdatedAt = new DateTime(2026, 1, 1)
+            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         });
     }
 
