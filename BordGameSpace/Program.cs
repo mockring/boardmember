@@ -206,6 +206,8 @@ using (var scope = app.Services.CreateScope())
             ""Id"" SERIAL PRIMARY KEY,
             ""MemberId"" INT NULL,
             ""ProductId"" INT NOT NULL,
+            ""RenterName"" VARCHAR(100) NOT NULL DEFAULT '',
+            ""RenterPhone"" VARCHAR(20) NOT NULL DEFAULT '',
             ""PickupDate"" TIMESTAMPTZ NULL,
             ""BorrowDate"" TIMESTAMPTZ NULL,
             ""DueDate"" TIMESTAMPTZ NULL,
@@ -267,6 +269,25 @@ using (var scope = app.Services.CreateScope())
     {
         db.Database.ExecuteSqlRaw(createTablesSql);
         Console.WriteLine("[DB] 所有資料表建立完成");
+
+        // 修補缺少的欄位
+        db.Database.ExecuteSqlRaw(@"
+            ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterName"" VARCHAR(100) NOT NULL DEFAULT '';
+            ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterPhone"" VARCHAR(20) NOT NULL DEFAULT '';
+        ");
+
+        // 建立索引（大幅加速查詢，避免 62 秒逾時）
+        db.Database.ExecuteSqlRaw(@"
+            CREATE INDEX IF NOT EXISTS ""IX_Orders_CreatedAt_PaymentStatus"" ON ""Orders"" (""CreatedAt"", ""PaymentStatus"");
+            CREATE INDEX IF NOT EXISTS ""IX_PlayRecords_Status"" ON ""PlayRecords"" (""Status"");
+            CREATE INDEX IF NOT EXISTS ""IX_GameRentals_Status"" ON ""GameRentals"" (""Status"");
+            CREATE INDEX IF NOT EXISTS ""IX_SpaceReservations_ReservationDate_Status"" ON ""SpaceReservations"" (""ReservationDate"", ""Status"");
+            CREATE INDEX IF NOT EXISTS ""IX_Events_Status_EventDate"" ON ""Events"" (""Status"", ""EventDate"");
+            CREATE INDEX IF NOT EXISTS ""IX_Admins_Username"" ON ""Admins"" (""Username"");
+            CREATE INDEX IF NOT EXISTS ""IX_Members_Phone"" ON ""Members"" (""Phone"");
+            CREATE INDEX IF NOT EXISTS ""IX_Members_Email"" ON ""Members"" (""Email"");
+        ");
+        Console.WriteLine("[DB] 索引建立完成");
     }
     catch (Exception ex)
     {
