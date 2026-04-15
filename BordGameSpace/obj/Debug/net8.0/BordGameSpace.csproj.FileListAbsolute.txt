@@ -1,3 +1,12 @@
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.csproj.AssemblyReference.cache
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.GeneratedMSBuildEditorConfig.editorconfig
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.AssemblyInfoInputs.cache
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.AssemblyInfo.cs
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.csproj.CoreCompileInputs.cache
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.MvcApplicationPartsAssemblyInfo.cache
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.RazorAssemblyInfo.cache
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.RazorAssemblyInfo.cs
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.sourcelink.json
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/appsettings.Development.json
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/appsettings.json
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/BordGameSpace.staticwebassets.runtime.json
@@ -29,6 +38,8 @@
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.Extensions.Logging.Abstractions.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.Extensions.Options.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Mono.TextTemplating.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Npgsql.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/SixLabors.Fonts.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/System.CodeDom.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/System.Composition.AttributedModel.dll
@@ -90,14 +101,6 @@
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.Workspaces.resources.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.resources.dll
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.csproj.AssemblyReference.cache
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.GeneratedMSBuildEditorConfig.editorconfig
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.AssemblyInfoInputs.cache
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.AssemblyInfo.cs
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.csproj.CoreCompileInputs.cache
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.MvcApplicationPartsAssemblyInfo.cache
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.RazorAssemblyInfo.cache
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.RazorAssemblyInfo.cs
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/staticwebassets.build.json
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/staticwebassets.development.json
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/staticwebassets/msbuild.BordGameSpace.Microsoft.AspNetCore.StaticWebAssets.props
@@ -114,6 +117,3 @@
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.pdb
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.genruntimeconfig.cache
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/ref/BordGameSpace.dll
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Npgsql.dll
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
-/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.sourcelink.json
