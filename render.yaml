@@ -1,7 +1,4 @@
 # render.yaml - BordGameSpace 部署設定
-# 請在 Render Dashboard 建立 Web Service，並連接此 GitHub Repo
-# 或直接使用此檔案：render yaml deploy
-
 services:
   - type: web
     name: boardmember
@@ -15,5 +12,5 @@ services:
         value: Production
       - key: ConnectionStrings__DefaultConnection
         sync: false
-        # 範例格式，部署前請至 Render 設定替換
-        # value: "Host=aws-0-xx.pooler.supabase.com;Port=6543;Database=postgres;Username=postgres.xxx;Password=YOUR_PASSWORD;Pooling=true"
+        # 替換為你的 Supabase 密碼
+        # 格式：Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=6543;Database=postgres;Username=postgres;Password=你的密碼;Pooling=true
