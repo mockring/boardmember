@@ -31,7 +31,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connStr, npgsql =>
     {
         npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
-        npgsql.CommandTimeout(30);
+        npgsql.CommandTimeout(60);
     });
 });
 
