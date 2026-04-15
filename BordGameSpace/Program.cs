@@ -61,15 +61,15 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    // 使用 Migration 建立資料表（可正確處理 PostgreSQL 型別與約束）
-    // 先刪除確保完全乾淨（全新資料庫不需要保留任何資料）
-    try { db.Database.EnsureDeleted(); Console.WriteLine("[DB] 已刪除既有資料庫"); } catch { }
-    try { db.Database.Migrate(); Console.WriteLine("[DB] Migration 完成"); }
+    // 建立資料表（全新資料庫直接用 EnsureCreated 最穩定）
+    try
+    {
+        db.Database.EnsureCreated();
+        Console.WriteLine("[DB] 資料表建立完成");
+    }
     catch (Exception ex)
     {
-        Console.WriteLine($"[Migration] 遷移失敗: {ex.Message}");
-        try { db.Database.EnsureCreated(); Console.WriteLine("[DB] EnsureCreated 完成"); }
-        catch { }
+        Console.WriteLine($"[DB] 建立失敗: {ex.Message}");
     }
 
     // Seed Levels
