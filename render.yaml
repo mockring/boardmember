@@ -6,12 +6,10 @@ services:
     region: singapore
     plan: free
     dockerfilePath: ./Dockerfile
-    # Explicitly tell Render to use port 10000
-    port: 10000
+    # Match the port ASP.NET Core binds to (default 8080)
+    port: 8080
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__DefaultConnection
         sync: false
-      - key: PORT
-        value: "10000"
