@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set timezone
 ENV TZ=Asia/Taipei
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
+ENV DOTNET_CLI_ENABLE_FILE_WATCHING=0
+ENV ASPNETCORE_hostBuilder__disableFileWatcher=true
 
 COPY --from=build /app/publish .
 
