@@ -22,16 +22,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set timezone
 ENV TZ=Asia/Taipei
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
+
+# Disable file watchers to prevent inotify exhaustion in container
 ENV DOTNET_CLI_ENABLE_FILE_WATCHING=0
-ENV ASPNETCORE_hostBuilder__disableFileWatcher=true
 ENV DOTNET_watch=0
+ENV ASPNETCORE_HOSTBUILDER__disableFileWatcher=true
 ENV ASPNETCORE_HOSTBUILDER__RELOADCONFIGONCHANGE=false
+
+# ASP.NET Core standard Docker port env var (Render injects PORT env var for this)
+ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT:-10000}
 
 COPY --from=build /app/publish .
 
 EXPOSE 10000
 
-# Increase inotify limit to prevent file watcher exhaustion crashes
-RUN echo 8192 > /proc/sys/fs/inotify/max_user_instances || true
+# Increase inotify limit to prevent file watcher exhaustion (fallback if /proc is writable)
+RUN echo 8192 > /proc/sys/fs/inotify/max_user_instances 2>/dev/null || true
 
-ENTRYPOINT dotnet BordGameSpace.dll --server.urls http://0.0.0.0:$${PORT:-10000}
+ENTRYPOINT ["dotnet", "BordGameSpace.dll"]
