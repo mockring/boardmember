@@ -6,10 +6,12 @@ services:
     region: singapore
     plan: free
     dockerfilePath: ./Dockerfile
+    # Explicitly tell Render to use port 10000
+    port: 10000
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__DefaultConnection
         sync: false
-        # 替換為你的 Supabase 密碼
-        # 格式：Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=6543;Database=postgres;Username=postgres;Password=你的密碼;Pooling=true
+      - key: PORT
+        value: "10000"
