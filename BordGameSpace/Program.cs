@@ -38,7 +38,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connStr, npgsql =>
     {
         npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
-        npgsql.CommandTimeout(60);
+        npgsql.CommandTimeout(120);
     });
 });
 
@@ -339,8 +339,15 @@ using (var scope = app.Services.CreateScope())
 
     try { db.Database.ExecuteSqlRaw(seedSql); Console.WriteLine("[DB] Seed 完成"); }
     catch (Exception ex) { Console.WriteLine($"[Seed] 錯誤: {ex.Message}"); }
-}
 
+    // DB warmup: pre-connect to avoid first-request timeout on cold start
+    try
+    {
+        var keyCount = db.DataProtectionKeys.Count();
+        Console.WriteLine("[DB] DataProtectionKeys warmup: " + keyCount + " keys found");
+    }
+    catch (Exception ex) { Console.WriteLine("[DB] Warmup error (non-fatal): " + ex.Message); }
+}
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
