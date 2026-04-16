@@ -21,6 +21,7 @@ Environment.SetEnvironmentVariable("DOTNET_FileWatcherFlagBox_DefaultFileWatcher
 var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine("[Startup] Application building...");
+Console.Out.Flush();
 
 // Configure Data Protection keys stored on filesystem (not DB, avoiding cold-start DB timeout issues)
 var keysDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data", "protection-keys");
@@ -80,6 +81,8 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+Console.WriteLine("[Startup] App built successfully, starting middleware...");
+Console.Out.Flush();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -375,5 +378,16 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-Console.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
-app.Run();
+try
+{
+    Console.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
+    Console.Out.Flush();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("[Startup] FATAL: " + ex.GetType().Name + ": " + ex.Message);
+    Console.WriteLine("[Startup] StackTrace: " + ex.StackTrace);
+    Console.Out.Flush();
+    throw;
+}
