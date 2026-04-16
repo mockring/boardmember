@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using BordGameSpace.Models;
 
 namespace BordGameSpace.Data;
 
-public class AppDbContext : DbContext, IDataProtectionKeyContext
+public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -24,16 +23,10 @@ public class AppDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<EventRegistration> EventRegistrations { get; set; }
     public DbSet<RestockRecord> RestockRecords { get; set; }
     public DbSet<Admin> Admins { get; set; }
-    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // DataProtectionKey FriendlyName must be stored as TEXT (not TIMESTAMPTZ) to match the column type
-        modelBuilder.Entity<Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey>()
-            .Property(k => k.FriendlyName)
-            .HasColumnType("TEXT");
 
         // Member - Unique constraints
         modelBuilder.Entity<Member>()

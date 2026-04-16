@@ -1,15 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using BordGameSpace.Data;
 using BordGameSpace.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Data Protection to persist keys to the database (fixes Render ephemeral storage / key ring not found issue)
+// Configure Data Protection keys stored on filesystem (not DB, avoiding cold-start DB timeout issues)
+var keysDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data", "protection-keys");
+Directory.CreateDirectory(keysDirectory);
 builder.Services.AddDataProtection()
     .SetApplicationName("BoardMemberApp")
-    .PersistKeysToDbContext<AppDbContext>();
+    .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory));
 
 // 設定時區為台北 (UTC+8)
 try
@@ -69,6 +70,9 @@ using (var scope = app.Services.CreateScope())
 
     // 使用 raw SQL 建立所有資料表（繞過 pgBouncer Transaction Mode 對 EnsureCreated 的限制）
     // 順序嚴格按照 FK 依賴關係：被參照的表先建
+    // Clean up old DataProtectionKeys table from DB (if exists from previous failed deploy)
+    db.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"DataProtectionKeys\" CASCADE;");
+
     var createTablesSql = @"
         CREATE TABLE IF NOT EXISTS ""Levels"" (
             ""Id"" SERIAL PRIMARY KEY,
@@ -248,12 +252,6 @@ using (var scope = app.Services.CreateScope())
             FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL
         );
 
-        CREATE TABLE IF NOT EXISTS ""DataProtectionKeys"" (
-            ""Id"" SERIAL PRIMARY KEY,
-            ""Name"" VARCHAR(255) NULL,
-            ""FriendlyName"" TEXT NULL,
-            ""Xml"" TEXT NULL
-        );
 
         CREATE TABLE IF NOT EXISTS ""OrderItems"" (
             ""Id"" SERIAL PRIMARY KEY,
@@ -288,9 +286,6 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"
             ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterName"" VARCHAR(100) NOT NULL DEFAULT '';
             ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterPhone"" VARCHAR(20) NOT NULL DEFAULT '';
-            -- Fix FriendlyName column type: TIMESTAMPTZ -> TEXT
-            ALTER TABLE ""DataProtectionKeys"" ALTER COLUMN ""FriendlyName"" TYPE TEXT;
-            ALTER TABLE ""DataProtectionKeys"" ADD COLUMN IF NOT EXISTS ""Xml"" TEXT NULL;
         ");
 
         // 建立索引（大幅加速查詢，避免 62 秒逾時）
@@ -303,7 +298,6 @@ using (var scope = app.Services.CreateScope())
             CREATE INDEX IF NOT EXISTS ""IX_Admins_Username"" ON ""Admins"" (""Username"");
             CREATE INDEX IF NOT EXISTS ""IX_Members_Phone"" ON ""Members"" (""Phone"");
             CREATE INDEX IF NOT EXISTS ""IX_Members_Email"" ON ""Members"" (""Email"");
-            CREATE INDEX IF NOT EXISTS ""IX_DataProtectionKeys_Name"" ON ""DataProtectionKeys"" (""Name"");
         ");
         Console.WriteLine("[DB] 索引建立完成");
     }
@@ -342,13 +336,6 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw(seedSql); Console.WriteLine("[DB] Seed 完成"); }
     catch (Exception ex) { Console.WriteLine($"[Seed] 錯誤: {ex.Message}"); }
 
-    // DB warmup: pre-connect to avoid first-request timeout on cold start
-    try
-    {
-        var keyCount = db.DataProtectionKeys.Count();
-        Console.WriteLine("[DB] DataProtectionKeys warmup: " + keyCount + " keys found");
-    }
-    catch (Exception ex) { Console.WriteLine("[DB] Warmup error (non-fatal): " + ex.Message); }
 }
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
