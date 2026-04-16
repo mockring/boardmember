@@ -9,10 +9,10 @@ try {
     if (File.Exists(procLimit)) {
         var current = int.Parse(File.ReadAllText(procLimit).Trim());
         if (current < 8192) File.WriteAllText(procLimit, "8192");
-        Console.WriteLine($"[inotify] max_user_instances: {current} -> 8192");
+        Console.Error.WriteLine($"[inotify] max_user_instances: {current} -> 8192");
     }
 } catch (Exception ex) {
-    Console.WriteLine($"[inotify] adjustment skipped: {ex.Message}");
+    Console.Error.WriteLine($"[inotify] adjustment skipped: {ex.Message}");
 }
 
 // Suppress file-system watchers in containerized environment (avoids inotify exhaustion)
@@ -20,8 +20,7 @@ Environment.SetEnvironmentVariable("DOTNET_FileWatcherFlagBox_DefaultFileWatcher
 
 var builder = WebApplication.CreateBuilder(args);
 
-Console.WriteLine("[Startup] Application building...");
-Console.Out.Flush();
+Console.Error.WriteLine("[Startup] Application building...");
 
 // Configure Data Protection keys stored on filesystem (not DB, avoiding cold-start DB timeout issues)
 var keysDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data", "protection-keys");
@@ -81,8 +80,7 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
-Console.WriteLine("[Startup] App built successfully, starting middleware...");
-Console.Out.Flush();
+Console.Error.WriteLine("[Startup] App built successfully, starting middleware...");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -380,8 +378,7 @@ app.MapControllerRoute(
 
 try
 {
-    Console.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
-    Console.Out.Flush();
+    Console.Error.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
     app.Run();
 }
 catch (Exception ex)
