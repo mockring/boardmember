@@ -21,7 +21,11 @@ Environment.SetEnvironmentVariable("DOTNET_FileWatcherFlagBox_DefaultFileWatcher
 var builder = WebApplication.CreateBuilder(args);
 
 // Hardcode port binding for containerized deployment (Render uses port 10000)
-builder.WebHost.UseUrls("http://0.0.0.0:10000");
+// Directly configure Kestrel to bind to port 10000 on all interfaces
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Listen(System.Net.IPAddress.Any, 10000);
+});
 
 Console.Error.WriteLine("[Startup] Application building...");
 
