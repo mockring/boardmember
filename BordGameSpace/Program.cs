@@ -382,7 +382,10 @@ app.MapControllerRoute(
 try
 {
     Console.Error.WriteLine("[Startup] Application listening on http://0.0.0.0:10000");
+    Console.Error.Flush();
     app.Run();
+    Console.Error.WriteLine("[Startup] app.Run() returned (should never reach here)");
+    Console.Error.Flush();
 }
 catch (Exception ex)
 {
