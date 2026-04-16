@@ -27,4 +27,7 @@ COPY --from=build /app/publish .
 
 EXPOSE 8080
 
+# Increase inotify limit to prevent file watcher exhaustion crashes
+RUN echo 8192 > /proc/sys/fs/inotify/max_user_instances || true
+
 ENTRYPOINT ["dotnet", "BordGameSpace.dll", "--server.urls", "http://0.0.0.0:8080"]

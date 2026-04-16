@@ -3,7 +3,24 @@ using Microsoft.AspNetCore.DataProtection;
 using BordGameSpace.Data;
 using BordGameSpace.Services;
 
+// Fix: increase inotify instance limit on Linux to prevent "inotify instance limit reached" crashes
+try {
+    var procLimit = "/proc/sys/fs/inotify/max_user_instances";
+    if (File.Exists(procLimit)) {
+        var current = int.Parse(File.ReadAllText(procLimit).Trim());
+        if (current < 8192) File.WriteAllText(procLimit, "8192");
+        Console.WriteLine($"[inotify] max_user_instances: {current} -> 8192");
+    }
+} catch (Exception ex) {
+    Console.WriteLine($"[inotify] adjustment skipped: {ex.Message}");
+}
+
+// Suppress file-system watchers in containerized environment (avoids inotify exhaustion)
+Environment.SetEnvironmentVariable("DOTNET_FileWatcherFlagBox_DefaultFileWatcherWatchSubdirectories", "0");
+
 var builder = WebApplication.CreateBuilder(args);
+
+Console.WriteLine("[Startup] Application building...");
 
 // Configure Data Protection keys stored on filesystem (not DB, avoiding cold-start DB timeout issues)
 var keysDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data", "protection-keys");
@@ -358,4 +375,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+Console.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
 app.Run();
