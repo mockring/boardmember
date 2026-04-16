@@ -20,6 +20,9 @@ Environment.SetEnvironmentVariable("DOTNET_FileWatcherFlagBox_DefaultFileWatcher
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Hardcode port binding for containerized deployment (Render uses port 10000)
+builder.WebHost.UseUrls("http://0.0.0.0:10000");
+
 Console.Error.WriteLine("[Startup] Application building...");
 
 // Configure Data Protection keys stored on filesystem (not DB, avoiding cold-start DB timeout issues)
@@ -378,7 +381,7 @@ app.MapControllerRoute(
 
 try
 {
-    Console.Error.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
+    Console.Error.WriteLine("[Startup] Application listening on http://0.0.0.0:10000");
     app.Run();
 }
 catch (Exception ex)

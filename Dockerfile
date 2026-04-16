@@ -23,8 +23,6 @@ ENV DOTNET_watch=0
 ENV ASPNETCORE_HOSTBUILDER__disableFileWatcher=true
 ENV ASPNETCORE_HOSTBUILDER__RELOADCONFIGONCHANGE=false
 
-# Bind to port 10000 - this is the standard ASP.NET Core env var for port binding
-ENV ASPNETCORE_URLS=http://0.0.0.0:10000
 
 COPY --from=build /app/publish .
 
