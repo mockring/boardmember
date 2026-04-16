@@ -251,7 +251,7 @@ using (var scope = app.Services.CreateScope())
         CREATE TABLE IF NOT EXISTS ""DataProtectionKeys"" (
             ""Id"" SERIAL PRIMARY KEY,
             ""Name"" VARCHAR(255) NULL,
-            ""FriendlyName"" TIMESTAMPTZ NULL,
+            ""FriendlyName"" TEXT NULL,
             ""Xml"" TEXT NULL
         );
 
