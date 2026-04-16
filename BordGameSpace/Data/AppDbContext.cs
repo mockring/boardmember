@@ -30,6 +30,11 @@ public class AppDbContext : DbContext, IDataProtectionKeyContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // DataProtectionKey FriendlyName must be stored as TEXT (not TIMESTAMPTZ) to match the column type
+        modelBuilder.Entity<Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey>()
+            .Property(k => k.FriendlyName)
+            .HasColumnType("TEXT");
+
         // Member - Unique constraints
         modelBuilder.Entity<Member>()
             .HasIndex(m => m.Phone)
