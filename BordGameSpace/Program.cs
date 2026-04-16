@@ -1,8 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using BordGameSpace.Data;
 using BordGameSpace.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Data Protection to persist keys to the database (fixes Render ephemeral storage / key ring not found issue)
+builder.Services.AddDataProtection()
+    .SetApplicationName("BoardMemberApp")
+    .PersistKeysToDbContext<AppDbContext>();
 
 // 設定時區為台北 (UTC+8)
 try
@@ -241,6 +248,12 @@ using (var scope = app.Services.CreateScope())
             FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL
         );
 
+        CREATE TABLE IF NOT EXISTS ""DataProtectionKeys"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Name"" VARCHAR(255) NULL,
+            ""FriendlyName"" TIMESTAMPTZ NULL
+        );
+
         CREATE TABLE IF NOT EXISTS ""OrderItems"" (
             ""Id"" SERIAL PRIMARY KEY,
             ""OrderId"" INT NOT NULL,
@@ -286,6 +299,7 @@ using (var scope = app.Services.CreateScope())
             CREATE INDEX IF NOT EXISTS ""IX_Admins_Username"" ON ""Admins"" (""Username"");
             CREATE INDEX IF NOT EXISTS ""IX_Members_Phone"" ON ""Members"" (""Phone"");
             CREATE INDEX IF NOT EXISTS ""IX_Members_Email"" ON ""Members"" (""Email"");
+            CREATE INDEX IF NOT EXISTS ""IX_DataProtectionKeys_Name"" ON ""DataProtectionKeys"" (""Name"");
         ");
         Console.WriteLine("[DB] 索引建立完成");
     }

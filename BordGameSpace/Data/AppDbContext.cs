@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using BordGameSpace.Models;
 
 namespace BordGameSpace.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : DbContext, IDataProtectionKeyContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -23,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<EventRegistration> EventRegistrations { get; set; }
     public DbSet<RestockRecord> RestockRecords { get; set; }
     public DbSet<Admin> Admins { get; set; }
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
