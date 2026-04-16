@@ -251,7 +251,8 @@ using (var scope = app.Services.CreateScope())
         CREATE TABLE IF NOT EXISTS ""DataProtectionKeys"" (
             ""Id"" SERIAL PRIMARY KEY,
             ""Name"" VARCHAR(255) NULL,
-            ""FriendlyName"" TIMESTAMPTZ NULL
+            ""FriendlyName"" TIMESTAMPTZ NULL,
+            ""Xml"" TEXT NULL
         );
 
         CREATE TABLE IF NOT EXISTS ""OrderItems"" (
@@ -287,6 +288,7 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"
             ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterName"" VARCHAR(100) NOT NULL DEFAULT '';
             ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterPhone"" VARCHAR(20) NOT NULL DEFAULT '';
+            ALTER TABLE ""DataProtectionKeys"" ADD COLUMN IF NOT EXISTS ""Xml"" TEXT NULL;
         ");
 
         // 建立索引（大幅加速查詢，避免 62 秒逾時）

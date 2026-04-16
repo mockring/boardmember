@@ -117,3 +117,12 @@
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.pdb
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/BordGameSpace.genruntimeconfig.cache
 /home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/obj/Debug/net8.0/ref/BordGameSpace.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.AspNetCore.Cryptography.Internal.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.AspNetCore.DataProtection.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.AspNetCore.DataProtection.Abstractions.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.Extensions.Diagnostics.Abstractions.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/Microsoft.Extensions.Hosting.Abstractions.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/System.Security.Cryptography.Pkcs.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/System.Security.Cryptography.Xml.dll
+/home/user/.openclaw/workspace-coding/boardmember/BordGameSpace/bin/Debug/net8.0/runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll
