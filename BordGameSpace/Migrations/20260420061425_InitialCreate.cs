@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,14 +17,14 @@ namespace BordGameSpace.Migrations
                 name: "Admins",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Role = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -36,19 +35,19 @@ namespace BordGameSpace.Migrations
                 name: "Coupons",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    CouponType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    DiscountValue = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    MinPurchase = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    ApplicableTo = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    TotalQuantity = table.Column<int>(type: "integer", nullable: true),
-                    UsedCount = table.Column<int>(type: "integer", nullable: false),
-                    ValidFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ValidUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    CouponType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    DiscountValue = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    MinPurchase = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    ApplicableTo = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    TotalQuantity = table.Column<int>(type: "INTEGER", nullable: true),
+                    UsedCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    ValidFrom = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ValidUntil = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -59,17 +58,17 @@ namespace BordGameSpace.Migrations
                 name: "Events",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Content = table.Column<string>(type: "text", nullable: false),
-                    EventDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RegistrationDeadline = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    MaxParticipants = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ImageUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "TEXT", nullable: false),
+                    EventDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    RegistrationDeadline = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    MaxParticipants = table.Column<int>(type: "INTEGER", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ImageUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,18 +79,18 @@ namespace BordGameSpace.Migrations
                 name: "Levels",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    UpgradeThresholdHours = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    UpgradeThresholdAmount = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    GameDiscount = table.Column<decimal>(type: "numeric(3,2)", nullable: false),
-                    WeekdayHourlyRate = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    HolidayHourlyRate = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false),
-                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
-                    IsDeletable = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    UpgradeThresholdHours = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    UpgradeThresholdAmount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    GameDiscount = table.Column<decimal>(type: "decimal(3,2)", nullable: false),
+                    WeekdayHourlyRate = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    HolidayHourlyRate = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDeletable = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -102,19 +101,19 @@ namespace BordGameSpace.Migrations
                 name: "Products",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Price = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    Stock = table.Column<int>(type: "integer", nullable: true),
-                    LowStockAlert = table.Column<int>(type: "integer", nullable: false),
-                    ImageUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsService = table.Column<bool>(type: "boolean", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Category = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    Stock = table.Column<int>(type: "INTEGER", nullable: true),
+                    LowStockAlert = table.Column<int>(type: "INTEGER", nullable: false),
+                    ImageUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IsService = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -125,12 +124,12 @@ namespace BordGameSpace.Migrations
                 name: "EventRegistrations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    EventId = table.Column<int>(type: "integer", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    EventId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -147,19 +146,19 @@ namespace BordGameSpace.Migrations
                 name: "Members",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    Birthday = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    TotalPlayHours = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    TotalSpending = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    LevelId = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
+                    Birthday = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    TotalPlayHours = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    TotalSpending = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    LevelId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Status = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -176,14 +175,14 @@ namespace BordGameSpace.Migrations
                 name: "RestockRecords",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProductId = table.Column<int>(type: "integer", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
-                    Supplier = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ProductId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    Supplier = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -200,20 +199,20 @@ namespace BordGameSpace.Migrations
                 name: "Orders",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OrderType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    MemberId = table.Column<int>(type: "integer", nullable: true),
-                    MemberName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    MemberPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    TotalAmount = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    DiscountAmount = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    FinalAmount = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    CouponId = table.Column<int>(type: "integer", nullable: true),
-                    PaymentStatus = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    PaymentMethod = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    OrderType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: true),
+                    MemberName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    MemberPhone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    TotalAmount = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    FinalAmount = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    CouponId = table.Column<int>(type: "INTEGER", nullable: true),
+                    PaymentStatus = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    PaymentMethod = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -236,21 +235,21 @@ namespace BordGameSpace.Migrations
                 name: "GameRentals",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MemberId = table.Column<int>(type: "integer", nullable: true),
-                    ProductId = table.Column<int>(type: "integer", nullable: false),
-                    BorrowDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    PickupDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ReturnDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Deposit = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    RentalFee = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    OrderId = table.Column<int>(type: "integer", nullable: true),
-                    RenterName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    RenterPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: true),
+                    ProductId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BorrowDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    PickupDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ReturnDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Deposit = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    RentalFee = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    RenterName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    RenterPhone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -279,13 +278,13 @@ namespace BordGameSpace.Migrations
                 name: "MemberCoupons",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MemberId = table.Column<int>(type: "integer", nullable: false),
-                    CouponId = table.Column<int>(type: "integer", nullable: false),
-                    ReceivedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UsedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    OrderId = table.Column<int>(type: "integer", nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CouponId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ReceivedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -313,19 +312,19 @@ namespace BordGameSpace.Migrations
                 name: "OrderItems",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OrderId = table.Column<int>(type: "integer", nullable: false),
-                    ItemType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    ItemId = table.Column<int>(type: "integer", nullable: false),
-                    ItemName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
-                    Subtotal = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    DiscountType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    DiscountValue = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    CouponId = table.Column<int>(type: "integer", nullable: true),
-                    ProductId = table.Column<int>(type: "integer", nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ItemType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    ItemId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ItemName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    Subtotal = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    DiscountType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    DiscountValue = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    CouponId = table.Column<int>(type: "INTEGER", nullable: true),
+                    ProductId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -352,19 +351,19 @@ namespace BordGameSpace.Migrations
                 name: "PlayRecords",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MemberId = table.Column<int>(type: "integer", nullable: true),
-                    MemberName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    MemberPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    StartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    TotalHours = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
-                    HourlyRate = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(10,0)", nullable: false),
-                    OrderId = table.Column<int>(type: "integer", nullable: true),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: true),
+                    MemberName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    MemberPhone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndTime = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    TotalHours = table.Column<decimal>(type: "decimal(10,2)", nullable: true),
+                    HourlyRate = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(10,0)", nullable: false),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -387,23 +386,23 @@ namespace BordGameSpace.Migrations
                 name: "SpaceReservations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MemberId = table.Column<int>(type: "integer", nullable: true),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    ReservationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    StartTime = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    EndTime = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    PeopleCount = table.Column<int>(type: "integer", nullable: false),
-                    SpaceType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Hours = table.Column<int>(type: "integer", nullable: true),
-                    HourlyRate = table.Column<decimal>(type: "numeric(10,0)", nullable: true),
-                    TotalAmount = table.Column<decimal>(type: "numeric(10,0)", nullable: true),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    OrderId = table.Column<int>(type: "integer", nullable: true),
-                    Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    ReservationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    StartTime = table.Column<TimeSpan>(type: "TEXT", nullable: false),
+                    EndTime = table.Column<TimeSpan>(type: "TEXT", nullable: false),
+                    PeopleCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    SpaceType = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Hours = table.Column<int>(type: "INTEGER", nullable: true),
+                    HourlyRate = table.Column<decimal>(type: "decimal(10,0)", nullable: true),
+                    TotalAmount = table.Column<decimal>(type: "decimal(10,0)", nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -425,7 +424,7 @@ namespace BordGameSpace.Migrations
             migrationBuilder.InsertData(
                 table: "Admins",
                 columns: new[] { "Id", "CreatedAt", "IsActive", "Name", "PasswordHash", "Role", "Username" },
-                values: new object[] { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, "管理者", "$2a$12$TxebXYQUkvOcBy4nnG9EtuGG9byUZt1T6SPKhcoMFgFWwumLnZY/C", "Owner", "admin" });
+                values: new object[] { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, "管理者", "$2a$12$IU6b5RHXkuV.MqyjKptDq.CUobARvrrXBdJHUFWB3bVcsEBfvUhHG", "Owner", "admin" });
 
             migrationBuilder.InsertData(
                 table: "Coupons",

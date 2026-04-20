@@ -3,28 +3,11 @@ using Microsoft.AspNetCore.DataProtection;
 using BordGameSpace.Data;
 using BordGameSpace.Services;
 
-// Fix: increase inotify instance limit on Linux to prevent "inotify instance limit reached" crashes
-try {
-    var procLimit = "/proc/sys/fs/inotify/max_user_instances";
-    if (File.Exists(procLimit)) {
-        var current = int.Parse(File.ReadAllText(procLimit).Trim());
-        if (current < 8192) File.WriteAllText(procLimit, "8192");
-        Console.Error.WriteLine($"[inotify] max_user_instances: {current} -> 8192");
-    }
-} catch (Exception ex) {
-    Console.Error.WriteLine($"[inotify] adjustment skipped: {ex.Message}");
-}
-
-// Suppress file-system watchers in containerized environment (avoids inotify exhaustion)
-Environment.SetEnvironmentVariable("DOTNET_FileWatcherFlagBox_DefaultFileWatcherWatchSubdirectories", "0");
-
 var builder = WebApplication.CreateBuilder(args);
-
-// Hardcode port binding for containerized deployment (Render uses port 10000)
 
 Console.Error.WriteLine("[Startup] Application building...");
 
-// Configure Data Protection keys stored on filesystem (not DB, avoiding cold-start DB timeout issues)
+// Data Protection keys stored on filesystem (Azure App Service has persistent local storage)
 var keysDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data", "protection-keys");
 Directory.CreateDirectory(keysDirectory);
 builder.Services.AddDataProtection()
@@ -39,8 +22,6 @@ try
                   ?? TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
     TimeZoneInfo.ClearCachedData();
     TimeZoneInfo localZone = TimeZoneInfo.Local;
-    // 將本機時區設為台北（確保所有 DateTime.UtcNow 為台灣時間）
-    // 注意：這只是讓 .NET 取用本機時間時是正確的，伺服器本身的 tzdata 必須正確
     Console.WriteLine($"[TimeZone] Current: {localZone.DisplayName}, Taiwan: {taiwanZone?.DisplayName}");
 }
 catch (Exception ex)
@@ -51,15 +32,11 @@ catch (Exception ex)
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure PostgreSQL with connection resilience
+// Configure SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.UseNpgsql(connStr, npgsql =>
-    {
-        npgsql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
-        npgsql.CommandTimeout(120);
-    });
+    options.UseSqlite(connStr);
 });
 
 // Register services
@@ -90,7 +67,6 @@ using (var scope = app.Services.CreateScope())
 
     // 使用 raw SQL 建立所有資料表（繞過 pgBouncer Transaction Mode 對 EnsureCreated 的限制）
     // 順序嚴格按照 FK 依賴關係：被參照的表先建
-    // Clean up old DataProtectionKeys table from DB (if exists from previous failed deploy)
     db.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"DataProtectionKeys\" CASCADE;");
 
     var createTablesSql = @"
@@ -272,7 +248,6 @@ using (var scope = app.Services.CreateScope())
             FOREIGN KEY (""MemberId"") REFERENCES ""Members""(""Id"") ON DELETE SET NULL
         );
 
-
         CREATE TABLE IF NOT EXISTS ""OrderItems"" (
             ""Id"" SERIAL PRIMARY KEY,
             ""OrderId"" INT NOT NULL,
@@ -302,13 +277,11 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(createTablesSql);
         Console.WriteLine("[DB] 所有資料表建立完成");
 
-        // 修補缺少的欄位
         db.Database.ExecuteSqlRaw(@"
             ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterName"" VARCHAR(100) NOT NULL DEFAULT '';
             ALTER TABLE ""GameRentals"" ADD COLUMN IF NOT EXISTS ""RenterPhone"" VARCHAR(20) NOT NULL DEFAULT '';
         ");
 
-        // 建立索引（大幅加速查詢，避免 62 秒逾時）
         db.Database.ExecuteSqlRaw(@"
             CREATE INDEX IF NOT EXISTS ""IX_Orders_CreatedAt_PaymentStatus"" ON ""Orders"" (""CreatedAt"", ""PaymentStatus"");
             CREATE INDEX IF NOT EXISTS ""IX_PlayRecords_Status"" ON ""PlayRecords"" (""Status"");
@@ -326,7 +299,6 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"[DB] 資料表建立失敗: {ex.Message}");
     }
 
-    // 使用 raw SQL 執行 Seed Data（繞過 EF Core decimal 型別對應問題）
     var seedSql = @"
         INSERT INTO ""Levels"" (""Name"", ""UpgradeThresholdHours"", ""UpgradeThresholdAmount"", ""GameDiscount"", ""WeekdayHourlyRate"", ""HolidayHourlyRate"", ""SortOrder"", ""IsDefault"", ""IsDeletable"", ""CreatedAt"")
         VALUES ('非會員', 0, 0, 1.00, 60, 70, 0, TRUE, FALSE, NOW())
@@ -357,7 +329,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex) { Console.WriteLine($"[Seed] 錯誤: {ex.Message}"); }
 
 }
-// Configure the HTTP request pipeline.
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -380,7 +352,7 @@ app.MapControllerRoute(
 
 try
 {
-    Console.Error.WriteLine("[Startup] Application listening on http://0.0.0.0:10000");
+    Console.Error.WriteLine("[Startup] Application listening on http://0.0.0.0:8080");
     Console.Error.Flush();
     app.Run();
     Console.Error.WriteLine("[Startup] app.Run() returned (should never reach here)");
